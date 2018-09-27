@@ -1,0 +1,21 @@
+name: fuzzy-time
+version: '0.0.0.0'
+category: Time
+author: Tom Sydney Kerckhove
+maintainer: syd@cs-syd.eu
+copyright: ! 'Copyright: (c) 2017-2018 Tom Sydney Kerckhove'
+license: AllRightsReserved
+homepage: https://github.com/NorfairKing/fuzzy-time
+
+
+library:
+  source-dirs: src/
+  ghc-options: -Wall
+  dependencies:
+  - base >=4.9 && <=5
+  - containers
+  - megaparsec
+  - text
+  - time
+  - validity
+  - validity-time

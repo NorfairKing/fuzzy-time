@@ -1,0 +1,38 @@
+resolver: lts-12.10
+packages:
+- fuzzy-time
+- fuzzy-time-gen
+extra-deps:
+- git: https://github.com/NorfairKing/validity.git
+  commit: b9449de1466abc7c862b7e54b9bb18d6e4a02c81
+  subdirs:
+  - genvalidity
+  - genvalidity-aeson
+  - genvalidity-bytestring
+  - genvalidity-containers
+  - genvalidity-hspec
+  - genvalidity-hspec-aeson
+  - genvalidity-hspec-binary
+  - genvalidity-hspec-cereal
+  - genvalidity-hspec-hashable
+  - genvalidity-hspec-optics
+  - genvalidity-path
+  - genvalidity-property
+  - genvalidity-scientific
+  - genvalidity-text
+  - genvalidity-time
+  - genvalidity-unordered-containers
+  - genvalidity-uuid
+  - genvalidity-vector
+  - validity
+  - validity-aeson
+  - validity-bytestring
+  - validity-containers
+  - validity-path
+  - validity-primitive
+  - validity-scientific
+  - validity-text
+  - validity-time
+  - validity-unordered-containers
+  - validity-uuid
+  - validity-vector

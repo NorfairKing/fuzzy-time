@@ -1,0 +1,43 @@
+name: fuzzy-time-gen
+version: '0.0.0.0'
+category: Time
+author: Tom Sydney Kerckhove
+maintainer: syd@cs-syd.eu
+copyright: ! 'Copyright: (c) 2017-2018 Tom Sydney Kerckhove'
+license: AllRightsReserved
+homepage: https://github.com/NorfairKing/fuzzy-time
+
+
+library:
+  source-dirs: src/
+  ghc-options: -Wall
+  dependencies:
+  - base >=4.9 && <=5
+  - containers
+  - fuzzy-time
+  - genvalidity
+  - genvalidity-time
+  - megaparsec
+  - time
+
+tests:
+  fuzzy-time-test:
+    main: Spec.hs
+    source-dirs: test/
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - QuickCheck
+    - base
+    - fuzzy-time
+    - fuzzy-time-gen
+    - genvalidity
+    - genvalidity-hspec
+    - genvalidity-time
+    - hspec
+    - megaparsec
+    - text
+    - time
