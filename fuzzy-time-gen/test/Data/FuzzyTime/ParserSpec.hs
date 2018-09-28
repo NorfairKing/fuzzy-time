@@ -5,9 +5,12 @@ module Data.FuzzyTime.ParserSpec
     ( spec
     ) where
 
+import Data.GenValidity.Text ()
+import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import Text.Printf
 
 import Control.Monad
 
@@ -22,6 +25,7 @@ import Data.FuzzyTime.FuzzyTypes.Gen ()
 spec :: Spec
 spec = do
     describe "fuzzyDayP" $ do
+        parsesValidSpec fuzzyDayP
         let fd = parseJustSpecR fuzzyDayP
         fd 1 "yesterday" Yesterday
         fd 3 "today" Today
@@ -37,16 +41,21 @@ spec = do
         forM_ [1 .. 31] $ \i -> s (T.pack (show i)) (OnlyDay i)
         forM_ [32 .. 50] $ \i -> s (T.pack (show i)) (DiffDays i)
         forM_ [0 .. 50] $ \i -> do
-            s (T.pack ("+" <> show i)) (DiffDays i)
-            s (T.pack ("-" <> show i)) (DiffDays (negate i))
+            s (T.pack (printf "%+d" i)) (DiffDays i)
+            s (T.pack (printf "%+d" (negate i))) (DiffDays (negate i))
         f "0-0"
         forM_ (daysInMonth 2004) $ \(month, mds) -> do
             let m = monthNum month
-            forM_ [1 .. mds] $ \d ->
-                 s (T.pack $ concat [show m, "-", show d]) (DayInMonth m d)
-            forM_ [mds + 1 .. 31] $ \d ->
-                f (T.pack $ concat [show m, "-", show d])
+                optionsFor m_ d_ =
+                    nub $ do
+                        ms <- [printf "%d" m_, printf "%02d" m_]
+                        ds <- [printf "%d" d_, printf "%02d" d_]
+                        pure $ T.pack $ concat [ms, "-", ds] :: [Text]
+            forM_ [1 .. mds] $ \d -> do
+                forM_ (optionsFor m d) $ \t -> s t (DayInMonth m d)
+            forM_ [mds + 1 .. 31] $ \d -> forM_ (optionsFor m d) f
     describe "fuzzyDayOfTheWeekP" $ do
+        parsesValidSpec fuzzyDayOfTheWeekP
         let fd = parseJustSpecR fuzzyDayOfTheWeekP
         fd 1 "monday" Monday
         fd 2 "tuesday" Tuesday
@@ -67,6 +76,9 @@ parseJustSpec p s res =
 parseNothingSpec :: (Show a, Eq a) => Parser a -> Text -> Spec
 parseNothingSpec p s =
     it (unwords ["fails to parse", show s]) $ parseNothing p s
+
+parsesValidSpec :: (Show a, Eq a, Validity a) => Parser a -> Spec
+parsesValidSpec p = it "only parses valid values" $ forAllValid $ parsesValid p
 
 parseJust :: (Show a, Eq a) => Parser a -> Text -> a -> Expectation
 parseJust p s res =
@@ -94,3 +106,9 @@ parseNothing p s =
                 , "but it should have failed."
                 ]
         Left _ -> pure ()
+
+parsesValid :: (Show a, Eq a, Validity a) => Parser a -> Text -> Expectation
+parsesValid p s =
+    case parse (p <* eof) "test input" s of
+        Left _ -> pure ()
+        Right out -> shouldBeValid out
