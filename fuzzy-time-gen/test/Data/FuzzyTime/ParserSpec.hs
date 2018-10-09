@@ -17,6 +17,8 @@ import Control.Monad
 import Text.Megaparsec
 
 import Test.Hspec
+import Test.Hspec.QuickCheck
+import Test.QuickCheck
 import Test.Validity
 
 import Data.FuzzyTime
@@ -38,24 +40,57 @@ spec = do
         let s = parseJustSpec fuzzyDayP
         let f = parseNothingSpec fuzzyDayP
         s "0" (DiffDays 0)
-        forM_ [1 .. 31] $ \i -> s (T.pack (show i)) (OnlyDay i)
-        forM_ [32 .. 50] $ \i -> s (T.pack (show i)) (DiffDays i)
-        forM_ [0 .. 50] $ \i -> do
-            s (T.pack (printf "%+d" i)) (DiffDays i)
-            s (T.pack (printf "%+dd" i)) (DiffDays i)
-            s (T.pack (printf "%+d" (negate i))) (DiffDays (negate i))
-            s (T.pack (printf "%+dd" (negate i))) (DiffDays (negate i))
+        it "parses x as OnlyDay x for x between 1 and 31" $
+            forAll (choose (1, 31)) $ \i ->
+                parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
+        it "parses x as DiffDays x for x not 1 and 31" $
+            forAll (genUnchecked `suchThat` (\x -> x < 1 || x > 31)) $ \i ->
+                parseJust fuzzyDayP (T.pack (show i)) (DiffDays i)
+        -- forM_ [1 .. 31] $ \i -> s (T.pack (show i)) (OnlyDay i)
+        -- forM_ [32 .. 50] $ \i -> s (T.pack (show i)) (DiffDays i)
+        -- forM_ [0 .. 50] $ \i -> do
+        --     s (T.pack (printf "%+d" i)) (DiffDays i)
+        --     s (T.pack (printf "%+dd" i)) (DiffDays i)
+        --     s (T.pack (printf "%+d" (negate i))) (DiffDays (negate i))
+        --     s (T.pack (printf "%+dd" (negate i))) (DiffDays (negate i))
+        s "+3" (DiffDays 3)
+        s "-3" (DiffDays $ -3)
+        it "Parses +x as DiffDays x" $
+            forAllUnchecked $ \i ->
+                parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
+        s "+3d" (DiffDays 3)
+        s "-3d" (DiffDays $ -3)
+        it "Parses +xd as DiffDays x" $
+            forAllUnchecked $ \i ->
+                parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
         f "0-0"
-        forM_ (daysInMonth 2004) $ \(month, mds) -> do
-            let m = monthNum month
-                optionsFor m_ d_ =
-                    nub $ do
-                        ms <- [printf "%d" m_, printf "%02d" m_]
-                        ds <- [printf "%d" d_, printf "%02d" d_]
-                        pure $ T.pack $ concat [ms, "-", ds] :: [Text]
-            forM_ [1 .. mds] $ \d -> do
-                forM_ (optionsFor m d) $ \t -> s t (DayInMonth m d)
-            forM_ [mds + 1 .. 31] $ \d -> forM_ (optionsFor m d) f
+        s "2-13" (DayInMonth 2 13)
+        s "12-3" (DayInMonth 12 3)
+        s "02-13" (DayInMonth 2 13)
+        s "12-03" (DayInMonth 12 3)
+        s "02-03" (DayInMonth 2 3)
+        modifyMaxSuccess (\x -> (x * (365 * 4)) `div` 100) $
+            it "parses m-d (in any format) as DayInMonth" $
+            forAll (elements $ daysInMonth 2004) $ \(month, mds) ->
+                let m = monthNum month
+                 in forAll (choose (1, mds)) $ \d ->
+                        let options =
+                                nub $ do
+                                    ms <- [printf "%d" m, printf "%02d" m]
+                                    ds <- [printf "%d" d, printf "%02d" d]
+                                    pure $ T.pack $ concat [ms, "-", ds] :: [Text]
+                         in forAll (elements options) $ \s ->
+                                parseJust fuzzyDayP s (DayInMonth m d)
+        -- forM_ (daysInMonth 2004) $ \(month, mds) -> do
+        --     let m = monthNum month
+        --         optionsFor m_ d_ =
+        --             nub $ do
+        --                 ms <- [printf "%d" m_, printf "%02d" m_]
+        --                 ds <- [printf "%d" d_, printf "%02d" d_]
+        --                 pure $ T.pack $ concat [ms, "-", ds] :: [Text]
+        --     forM_ [1 .. mds] $ \d -> do
+        --         forM_ (optionsFor m d) $ \t -> s t (DayInMonth m d)
+        --     forM_ [mds + 1 .. 31] $ \d -> forM_ (optionsFor m d) f
     describe "fuzzyDayOfTheWeekP" $ do
         parsesValidSpec fuzzyDayOfTheWeekP
         let fd = parseJustSpecR fuzzyDayOfTheWeekP
