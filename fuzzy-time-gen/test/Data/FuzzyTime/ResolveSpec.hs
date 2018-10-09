@@ -71,6 +71,12 @@ spec =
         it "works for DayInMonth for this example for february 29th" $
             resolveDay (fromGregorian 2001 1 30) (DayInMonth 2 29) `shouldBe`
             fromGregorian 2004 2 29
+        it "produces valid values when given 'DayInMonth' values" $
+            forAllValid $ \d ->
+                forAllShrink
+                    ((NextDayOfTheWeek <$> genValid) `suchThat`
+                     isValid)
+                    shrinkValid $ \fd -> shouldBeValid $ resolveDay d fd
         it
             "works for NextDayOfTheWeek with a day of the week after today in the current week" $
             resolveDay (fromGregorian 2018 10 9) (NextDayOfTheWeek Thursday) `shouldBe`
@@ -79,3 +85,11 @@ spec =
             "works for NextDayOfTheWeek with a day of the week after today in the next week" $
             resolveDay (fromGregorian 2018 10 9) (NextDayOfTheWeek Monday) `shouldBe`
             fromGregorian 2018 10 15
+        it
+            "works for NextDayOfTheWeek with a day of the week after today in the current week at the end of the year" $
+            resolveDay (fromGregorian 2020 12 30) (NextDayOfTheWeek Saturday) `shouldBe`
+            fromGregorian 2021 01 02
+        it
+            "works for NextDayOfTheWeek with a day of the week after today in the next week at the end of the year" $
+            resolveDay (fromGregorian 2020 12 30) (NextDayOfTheWeek Tuesday) `shouldBe`
+            fromGregorian 2021 01 05
