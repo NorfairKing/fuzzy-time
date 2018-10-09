@@ -5,6 +5,7 @@ module Data.FuzzyTime.Resolve
 
 import Data.Maybe
 import Data.Time
+import Data.Time.Calendar.WeekDate
 
 import Data.FuzzyTime.Types
 
@@ -21,6 +22,7 @@ resolveDay d fd =
         OnlyDay di -> nextDayOnDay d di
         DayInMonth mi di -> nextDayOndayInMonth d mi di
         DiffDays ds -> addDays ds d
+        NextDayOfTheWeek dow -> nextDayOfTheWeek d dow
         ExactDay d_ -> d_
 
 nextDayOnDay :: Day -> Int -> Day
@@ -51,3 +53,12 @@ nextDayOndayInMonth d mi di =
                                  else go (y + 1)
                     else go (y + 1)
      in go y_
+
+nextDayOfTheWeek :: Day -> DayOfTheWeek -> Day
+nextDayOfTheWeek d dow =
+    let (y, w, i) = toWeekDate d
+        w' =
+            if i >= dayOfTheWeekNum dow
+                then w + 1
+                else w
+     in fromWeekDate y w' (dayOfTheWeekNum dow)

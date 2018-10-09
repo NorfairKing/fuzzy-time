@@ -71,3 +71,11 @@ spec =
         it "works for DayInMonth for this example for february 29th" $
             resolveDay (fromGregorian 2001 1 30) (DayInMonth 2 29) `shouldBe`
             fromGregorian 2004 2 29
+        it
+            "works for NextDayOfTheWeek with a day of the week after today in the current week" $
+            resolveDay (fromGregorian 2018 10 9) (NextDayOfTheWeek Thursday) `shouldBe`
+            fromGregorian 2018 10 11
+        it
+            "works for NextDayOfTheWeek with a day of the week after today in the next week" $
+            resolveDay (fromGregorian 2018 10 9) (NextDayOfTheWeek Monday) `shouldBe`
+            fromGregorian 2018 10 15

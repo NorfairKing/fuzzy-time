@@ -83,6 +83,12 @@ data Month
     | December
     deriving (Show, Eq, Generic, Enum, Bounded)
 
+dayOfTheWeekNum :: DayOfTheWeek -> Int
+dayOfTheWeekNum = (+1) . fromEnum
+
+numDayOfTheWeek :: Int -> DayOfTheWeek
+numDayOfTheWeek = toEnum . (\x -> x - 1)
+
 instance Validity Month
 
 daysInMonth :: Integer -> [(Month, Int)]
