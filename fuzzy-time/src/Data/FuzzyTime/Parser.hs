@@ -57,6 +57,7 @@ fuzzyDayP =
                parseTimeM True defaultTimeLocale "%Y-%m-%d")
         , try dayInMonthP
         , try dayOfTheMonthP
+        , try $ NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
         , diffDaysP
         ]
 
