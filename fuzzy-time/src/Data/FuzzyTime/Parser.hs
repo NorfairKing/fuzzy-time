@@ -78,8 +78,10 @@ dayInMonthP = do
     pure v
 
 diffDaysP :: Parser FuzzyDay
-diffDaysP =
-    DiffDays <$> Lexer.lexeme Char.space (Lexer.signed Char.space Lexer.decimal)
+diffDaysP = fmap DiffDays $ do
+    d <- Lexer.lexeme Char.space (Lexer.signed Char.space Lexer.decimal)
+    void $ optional $ char 'd'
+    pure d
 
 -- | Can handle:
 --

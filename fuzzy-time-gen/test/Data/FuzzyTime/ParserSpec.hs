@@ -42,7 +42,9 @@ spec = do
         forM_ [32 .. 50] $ \i -> s (T.pack (show i)) (DiffDays i)
         forM_ [0 .. 50] $ \i -> do
             s (T.pack (printf "%+d" i)) (DiffDays i)
+            s (T.pack (printf "%+dd" i)) (DiffDays i)
             s (T.pack (printf "%+d" (negate i))) (DiffDays (negate i))
+            s (T.pack (printf "%+dd" (negate i))) (DiffDays (negate i))
         f "0-0"
         forM_ (daysInMonth 2004) $ \(month, mds) -> do
             let m = monthNum month
