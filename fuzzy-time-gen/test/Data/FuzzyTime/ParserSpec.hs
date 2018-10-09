@@ -46,13 +46,6 @@ spec = do
         it "parses x as DiffDays x for x not 1 and 31" $
             forAll (genUnchecked `suchThat` (\x -> x < 1 || x > 31)) $ \i ->
                 parseJust fuzzyDayP (T.pack (show i)) (DiffDays i)
-        -- forM_ [1 .. 31] $ \i -> s (T.pack (show i)) (OnlyDay i)
-        -- forM_ [32 .. 50] $ \i -> s (T.pack (show i)) (DiffDays i)
-        -- forM_ [0 .. 50] $ \i -> do
-        --     s (T.pack (printf "%+d" i)) (DiffDays i)
-        --     s (T.pack (printf "%+dd" i)) (DiffDays i)
-        --     s (T.pack (printf "%+d" (negate i))) (DiffDays (negate i))
-        --     s (T.pack (printf "%+dd" (negate i))) (DiffDays (negate i))
         s "+3" (DiffDays 3)
         s "-3" (DiffDays $ -3)
         it "Parses +x as DiffDays x" $
@@ -79,28 +72,39 @@ spec = do
                                     ms <- [printf "%d" m, printf "%02d" m]
                                     ds <- [printf "%d" d, printf "%02d" d]
                                     pure $ T.pack $ concat [ms, "-", ds] :: [Text]
-                         in forAll (elements options) $ \s ->
-                                parseJust fuzzyDayP s (DayInMonth m d)
-        -- forM_ (daysInMonth 2004) $ \(month, mds) -> do
-        --     let m = monthNum month
-        --         optionsFor m_ d_ =
-        --             nub $ do
-        --                 ms <- [printf "%d" m_, printf "%02d" m_]
-        --                 ds <- [printf "%d" d_, printf "%02d" d_]
-        --                 pure $ T.pack $ concat [ms, "-", ds] :: [Text]
-        --     forM_ [1 .. mds] $ \d -> do
-        --         forM_ (optionsFor m d) $ \t -> s t (DayInMonth m d)
-        --     forM_ [mds + 1 .. 31] $ \d -> forM_ (optionsFor m d) f
+                         in forAll (elements options) $ \s_ ->
+                                parseJust fuzzyDayP s_ (DayInMonth m d)
+        it
+            "parses whatever the fuzzy day parser parses, as the next day of the week" $
+            forAllUnchecked $ \t ->
+                case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t <*>
+                     parse (fuzzyDayP <* eof) "test input" t of
+                    Left _ -> pure ()
+                    Right (dow, fd_) ->
+                        case fd_ of
+                            NextDayOfTheWeek dow' -> dow' `shouldBe` dow
+                            _ ->
+                                expectationFailure
+                                    "fuzzyDayP parsed something other than a day of the week"
+        it "parses the day of the week string as NextDayOfTheWeek" $
+            forAll (elements dayOfTheWeekStrings) $ \(dow, i, t) ->
+                forAll (elements $ drop i $ T.inits t) $ \t_ ->
+                    parseJust fuzzyDayP t_ (NextDayOfTheWeek dow)
     describe "fuzzyDayOfTheWeekP" $ do
         parsesValidSpec fuzzyDayOfTheWeekP
         let fd = parseJustSpecR fuzzyDayOfTheWeekP
-        fd 1 "monday" Monday
-        fd 2 "tuesday" Tuesday
-        fd 1 "wednesday" Wednesday
-        fd 2 "thursday" Thursday
-        fd 1 "friday" Friday
-        fd 2 "saturday" Saturday
-        fd 2 "sunday" Sunday
+        forM_ dayOfTheWeekStrings $ \(dow, ix, s) -> fd ix s dow
+
+dayOfTheWeekStrings :: [(DayOfTheWeek, Int, Text)]
+dayOfTheWeekStrings =
+    [ (Monday, 1, "monday")
+    , (Tuesday, 2, "tuesday")
+    , (Wednesday, 1, "wednesday")
+    , (Thursday, 2, "thursday")
+    , (Friday, 1, "friday")
+    , (Saturday, 2, "saturday")
+    , (Sunday, 2, "sunday")
+    ]
 
 parseJustSpecR :: (Show a, Eq a) => Parser a -> Int -> Text -> a -> Spec
 parseJustSpecR p i t res =

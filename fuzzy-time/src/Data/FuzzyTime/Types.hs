@@ -23,6 +23,7 @@ data FuzzyDay
     | DayInMonth Int -- The month
                  Int -- The day within the month
     | DiffDays Integer -- The difference in days
+    | NextDayOfTheWeek DayOfTheWeek
     | ExactDay Day
     deriving (Show, Eq, Generic)
 
@@ -104,7 +105,7 @@ daysInMonth y =
     ]
 
 monthNum :: Month -> Int
-monthNum = (+1) . fromEnum
+monthNum = (+ 1) . fromEnum
 
 numMonth :: Int -> Month
-numMonth = toEnum . (\x -> x-1)
+numMonth = toEnum . (\x -> x - 1)
