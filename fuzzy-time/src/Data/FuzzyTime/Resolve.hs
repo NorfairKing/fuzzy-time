@@ -31,34 +31,36 @@ nextDayOnDay d di =
         go :: Integer -> [(Month, Int)] -> Day
         go y [] =
             let y' = y + 1
-             in go y' (daysInMonth y')
+            in go y' (daysInMonth y')
         go y ((month, mds):rest) =
             if mds >= di
                 then let d' = fromGregorian y (monthNum month) di
-                      in if d' >= d
-                             then d'
-                             else go y rest
+                     in if d' >= d
+                            then d'
+                            else go y rest
                 else go y rest
-     in go y_ (drop (m_ - 1) $ daysInMonth y_)
+    in go y_ (drop (m_ - 1) $ daysInMonth y_)
 
 nextDayOndayInMonth :: Day -> Int -> Int -> Day
 nextDayOndayInMonth d mi di =
     let (y_, _, _) = toGregorian d
         go y =
             let mds = fromJust $ lookup (numMonth mi) (daysInMonth y)
-             in if mds >= di
-                    then let d' = fromGregorian y mi di
-                          in if d' >= d
-                                 then d'
-                                 else go (y + 1)
-                    else go (y + 1)
-     in go y_
+            in if mds >= di
+                   then let d' = fromGregorian y mi di
+                        in if d' >= d
+                               then d'
+                               else go (y + 1)
+                   else go (y + 1)
+    in go y_
 
 nextDayOfTheWeek :: Day -> DayOfTheWeek -> Day
 nextDayOfTheWeek d dow =
-    let (y, w, i) = toWeekDate d
-        w' =
-            if i >= dayOfTheWeekNum dow
-                then w + 1
-                else w
-     in fromWeekDate y w' (dayOfTheWeekNum dow)
+    let (_, _, i_) = toWeekDate d
+        down = dayOfTheWeekNum dow
+        diff = fromIntegral $ down - i_
+        diff' =
+            if diff <= 0
+                then diff + 7
+                else diff
+    in addDays diff' d
