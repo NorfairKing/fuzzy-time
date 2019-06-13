@@ -76,7 +76,7 @@ spec = do
                                 parseJust fuzzyDayP s_ (DayInMonth m d)
         it
             "parses whatever the fuzzy day parser parses, as the next day of the week" $
-            forAllUnchecked $ \t ->
+            forAllValid $ \t ->
                 case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t <*>
                      parse (fuzzyDayP <* eof) "test input" t of
                     Left _ -> pure ()
