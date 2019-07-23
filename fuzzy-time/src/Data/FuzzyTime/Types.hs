@@ -2,10 +2,10 @@
 
 module Data.FuzzyTime.Types where
 
+import Data.Fixed
 import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
-import Data.Fixed
 
 import Data.Time
 
@@ -15,11 +15,28 @@ data FuzzyZonedTime =
 
 instance Validity FuzzyZonedTime
 
-data FuzzyDateTime =
-  FuzzyDateTime FuzzyDay FuzzyTimeOfDay
+data AmbiguousLocalTime
+  = OnlyDaySpecified Day
+  | BothTimeAndDay LocalTime
   deriving (Show, Eq, Generic)
 
-instance Validity FuzzyDateTime
+instance Validity AmbiguousLocalTime
+
+newtype FuzzyLocalTime =
+  FuzzyLocalTime
+    { unFuzzyLocalTime :: Some FuzzyDay FuzzyTimeOfDay
+    }
+  deriving (Show, Eq, Generic)
+
+instance Validity FuzzyLocalTime
+
+data Some a b
+  = One a
+  | Other b
+  | Both a b
+  deriving (Show, Eq, Generic)
+
+instance (Validity a, Validity b) => Validity (Some a b)
 
 data FuzzyTimeOfDay
   = SameTime

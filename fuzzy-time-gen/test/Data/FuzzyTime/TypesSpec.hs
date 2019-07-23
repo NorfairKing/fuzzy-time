@@ -14,8 +14,8 @@ import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
 spec = do
-  eqSpecOnValid @FuzzyDateTime
-  genValidSpec @FuzzyDateTime
+  eqSpecOnValid @FuzzyLocalTime
+  genValidSpec @FuzzyLocalTime
   eqSpecOnValid @FuzzyTimeOfDay
   genValidSpec @FuzzyTimeOfDay
   eqSpecOnValid @FuzzyDay

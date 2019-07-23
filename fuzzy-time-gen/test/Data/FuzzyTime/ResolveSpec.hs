@@ -15,6 +15,60 @@ import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
 spec = do
+  describe "resolveLocalTime" $ do
+    it "produces valid local times" $ producesValidsOnValids2 resolveLocalTime
+    it "works the same as resolveLocalTimeOne" $
+      forAllValid $ \lt ->
+        forAllValid $ \fd ->
+          resolveLocalTime lt (FuzzyLocalTime (One fd)) `shouldBe` OnlyDaySpecified (resolveLocalTimeOne lt fd)
+    it "works the same as resolveLocalTimeOther" $
+      forAllValid $ \lt ->
+        forAllValid $ \ftod ->
+          resolveLocalTime lt (FuzzyLocalTime (Other ftod)) `shouldBe`
+          BothTimeAndDay (resolveLocalTimeOther lt ftod)
+    it "works the same as resolveLocalTimeBoth" $
+      forAllValid $ \lt ->
+        forAllValid $ \fd ->
+          forAllValid $ \ftod ->
+            resolveLocalTime lt (FuzzyLocalTime (Both fd ftod)) `shouldBe`
+            BothTimeAndDay (resolveLocalTimeBoth lt fd ftod)
+    describe "resolveLocalTimeOther" $ do
+      it "works for unspecified noon, before noon" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (< midday)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Noon `shouldBe` LocalTime ld midday
+      it "works for unspecified noon, after noon" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (>= midday)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Noon `shouldBe` LocalTime (addDays 1 ld) midday
+      it "works for unspecified midnight" $
+        forAllValid $ \ld ->
+          forAllValid $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Midnight `shouldBe`
+            LocalTime (addDays 1 ld) midnight
+      it "works for unspecified morning, before morning" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (< morning)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Morning `shouldBe` LocalTime ld morning
+      it "works for unspecified morning, after morning" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (>= morning)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Morning `shouldBe`
+            LocalTime (addDays 1 ld) morning
+      it "works for unspecified evening, before evening" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (< evening)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Evening `shouldBe` LocalTime ld evening
+      it "works for unspecified evening, after evening" $
+        forAllValid $ \ld ->
+          forAll (genValid `suchThat` (>= evening)) $ \tod ->
+            resolveLocalTimeOther (LocalTime ld tod) Evening `shouldBe`
+            LocalTime (addDays 1 ld) evening
+    describe "resolveLocalTimeBoth" $ do
+      it "works like resolveDay if the fuzzy time of day is SameTime" $
+        forAllValid $ \lt@(LocalTime ld tod) ->
+          forAllValid $ \fd ->
+            resolveLocalTimeBoth lt fd SameTime `shouldBe` LocalTime (resolveDay ld fd) tod
   describe "normaliseTimeOfDay" $ do
     it "produces valid times of day" $ producesValid normaliseTimeOfDay
     it "works for this example of tomorrow" $

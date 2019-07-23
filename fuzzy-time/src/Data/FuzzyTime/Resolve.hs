@@ -1,5 +1,11 @@
 module Data.FuzzyTime.Resolve
   ( resolveZonedTime
+  , resolveLocalTime
+  , resolveLocalTimeOne
+  , resolveLocalTimeOther
+  , resolveLocalTimeBoth
+  , morning
+  , evening
   , resolveTimeOfDay
   , normaliseTimeOfDay
   , resolveDay
@@ -15,14 +21,31 @@ import Data.FuzzyTime.Types
 resolveZonedTime :: ZonedTime -> FuzzyZonedTime -> ZonedTime
 resolveZonedTime zt ZonedNow = zt
 
+resolveLocalTime :: LocalTime -> FuzzyLocalTime -> AmbiguousLocalTime
+resolveLocalTime lt (FuzzyLocalTime sft) =
+  case sft of
+    One fd -> OnlyDaySpecified $ resolveLocalTimeOne lt fd
+    Other ftod -> BothTimeAndDay $ resolveLocalTimeOther lt ftod
+    Both fd ftod -> BothTimeAndDay $ resolveLocalTimeBoth lt fd ftod
+
+resolveLocalTimeOne :: LocalTime -> FuzzyDay -> Day
+resolveLocalTimeOne (LocalTime ld _) fd = resolveDay ld fd
+
+resolveLocalTimeOther :: LocalTime -> FuzzyTimeOfDay -> LocalTime
+resolveLocalTimeOther (LocalTime ld ltod) ftod = LocalTime ld (resolveTimeOfDay ltod ftod)
+
+resolveLocalTimeBoth :: LocalTime -> FuzzyDay -> FuzzyTimeOfDay -> LocalTime
+resolveLocalTimeBoth (LocalTime ld ltod) fd ftod =
+  LocalTime (resolveDay ld fd) (resolveTimeOfDay ltod ftod)
+
 resolveTimeOfDay :: TimeOfDay -> FuzzyTimeOfDay -> TimeOfDay
 resolveTimeOfDay tod@(TimeOfDay h m s) ftod =
   case ftod of
     SameTime -> tod
     Noon -> midday
     Midnight -> midnight
-    Morning -> TimeOfDay 6 0 0
-    Evening -> TimeOfDay 18 0 0
+    Morning -> morning
+    Evening -> evening
     AtHour h_ -> TimeOfDay h_ 0 0
     AtMinute h_ m_ -> TimeOfDay h_ m_ 0
     AtExact tod_ -> tod_
@@ -38,6 +61,12 @@ normaliseTimeOfDay (TimeOfDay h m s) =
       totalH = h + (totalM - m') `div` 60
       h' = totalH `mod` 24
    in TimeOfDay h' m' s'
+
+morning :: TimeOfDay
+morning = TimeOfDay 6 0 0
+
+evening :: TimeOfDay
+evening = TimeOfDay 18 0 0
 
 resolveDay :: Day -> FuzzyDay -> Day
 resolveDay d fd =

@@ -7,9 +7,14 @@ import Data.GenValidity.Time ()
 
 import Data.FuzzyTime.Types
 
-instance GenUnchecked FuzzyDateTime
+instance (GenUnchecked a, GenUnchecked b) => GenUnchecked (Some a b)
 
-instance GenValid FuzzyDateTime where
+instance (GenValid a, GenValid b) => GenValid (Some a b) where
+  genValid = genValidStructurally
+
+instance GenUnchecked FuzzyLocalTime
+
+instance GenValid FuzzyLocalTime where
   genValid = genValidStructurally
 
 instance GenUnchecked FuzzyTimeOfDay
