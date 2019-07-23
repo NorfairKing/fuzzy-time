@@ -14,7 +14,64 @@ import Data.FuzzyTime.Types
 import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
-spec =
+spec = do
+  describe "normaliseTimeOfDay" $ do
+    it "produces valid times of day" $ producesValid normaliseTimeOfDay
+    it "works for this example of tomorrow" $
+      normaliseTimeOfDay (TimeOfDay 25 0 0) `shouldBe` TimeOfDay 1 0 0
+    it "works for this example of tomorrow" $
+      normaliseTimeOfDay (TimeOfDay 23 120 0) `shouldBe` TimeOfDay 1 0 0
+    it "works for this example of tomorrow" $
+      normaliseTimeOfDay (TimeOfDay 23 0 7200) `shouldBe` TimeOfDay 1 0 0
+    it "works for this example of tomorrow" $
+      normaliseTimeOfDay (TimeOfDay 23 120 7200) `shouldBe` TimeOfDay 3 0 0
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay (-1) 0 0) `shouldBe` TimeOfDay 23 0 0
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay 0 (-1) 0) `shouldBe` TimeOfDay 23 59 0
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay 0 0 (-1)) `shouldBe` TimeOfDay 23 59 59
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.01)) `shouldBe` TimeOfDay 23 59 59.99
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00001)) `shouldBe` TimeOfDay 23 59 59.99999
+    it "works for this example of yesterday" $
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00000001)) `shouldBe` TimeOfDay 23 59 59.99999999
+  describe "resolveTimeOfDay" $ do
+    it "produces valid times of day" $ producesValidsOnValids2 resolveTimeOfDay
+    it "works for sametime " $ forAllValid $ \tod -> resolveTimeOfDay tod SameTime `shouldBe` tod
+    it "works for noon " $
+      forAllValid $ \tod -> resolveTimeOfDay tod Noon `shouldBe` TimeOfDay 12 0 0
+    it "works for midnight " $
+      forAllValid $ \tod -> resolveTimeOfDay tod Midnight `shouldBe` TimeOfDay 0 0 0
+    it "works for morning " $
+      forAllValid $ \tod -> resolveTimeOfDay tod Morning `shouldBe` TimeOfDay 6 0 0
+    it "works for evening" $
+      forAllValid $ \tod -> resolveTimeOfDay tod Evening `shouldBe` TimeOfDay 18 0 0
+    it "works for atHour" $
+      forAllValid $ \tod ->
+        forAllValid $ \h -> resolveTimeOfDay tod (AtHour h) `shouldBe` TimeOfDay h 0 0
+    it "works for atMinute" $
+      forAllValid $ \tod ->
+        forAllValid $ \h ->
+          forAllValid $ \m -> resolveTimeOfDay tod (AtMinute h m) `shouldBe` TimeOfDay h m 0
+    it "works for atExact" $
+      forAllValid $ \tod1 ->
+        forAllValid $ \tod2 -> resolveTimeOfDay tod1 (AtExact tod2) `shouldBe` tod2
+    it "has an inverse with hoursDiff" $
+      forAllValid $ \tod ->
+        forAllValid $ \hd ->
+          resolveTimeOfDay (resolveTimeOfDay tod (HoursDiff hd)) (HoursDiff (-hd)) `shouldBe` tod
+    it "has an inverse with minutesDiff" $
+      forAllValid $ \tod ->
+        forAllValid $ \md ->
+          resolveTimeOfDay (resolveTimeOfDay tod (MinutesDiff md)) (MinutesDiff (-md)) `shouldBe`
+          tod
+    it "has an inverse with secondsDiff" $
+      forAllValid $ \tod ->
+        forAllValid $ \sd ->
+          resolveTimeOfDay (resolveTimeOfDay tod (SecondsDiff sd)) (SecondsDiff (-sd)) `shouldBe`
+          tod
   describe "resolveDay" $ do
     it "produces valid days" $ producesValidsOnValids2 resolveDay
     it "works for this example for Yesterday" $

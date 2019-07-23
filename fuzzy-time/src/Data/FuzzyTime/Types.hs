@@ -5,6 +5,7 @@ module Data.FuzzyTime.Types where
 import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
+import Data.Fixed
 
 import Data.Time
 
@@ -21,7 +22,8 @@ data FuzzyDateTime =
 instance Validity FuzzyDateTime
 
 data FuzzyTimeOfDay
-  = Noon
+  = SameTime
+  | Noon
   | Midnight
   | Morning
   | Evening
@@ -30,6 +32,9 @@ data FuzzyTimeOfDay
       Int -- ^ The hour of the day
       Int -- ^ The minute of the day
   | AtExact TimeOfDay
+  | HoursDiff Int
+  | MinutesDiff Int
+  | SecondsDiff Pico
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyTimeOfDay where
