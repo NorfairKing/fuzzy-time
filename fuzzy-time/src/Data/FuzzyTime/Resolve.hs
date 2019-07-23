@@ -7,6 +7,7 @@ module Data.FuzzyTime.Resolve
   , morning
   , evening
   , resolveTimeOfDay
+  , resolveTimeOfDayWithDiff
   , normaliseTimeOfDay
   , resolveDay
   ) where
@@ -32,35 +33,54 @@ resolveLocalTimeOne :: LocalTime -> FuzzyDay -> Day
 resolveLocalTimeOne (LocalTime ld _) fd = resolveDay ld fd
 
 resolveLocalTimeOther :: LocalTime -> FuzzyTimeOfDay -> LocalTime
-resolveLocalTimeOther (LocalTime ld ltod) ftod = LocalTime ld (resolveTimeOfDay ltod ftod)
+resolveLocalTimeOther (LocalTime ld ltod) ftod =
+  let (d, tod) = resolveTimeOfDayWithDiff ltod ftod
+   in LocalTime (addDays d ld) tod
 
 resolveLocalTimeBoth :: LocalTime -> FuzzyDay -> FuzzyTimeOfDay -> LocalTime
 resolveLocalTimeBoth (LocalTime ld ltod) fd ftod =
-  LocalTime (resolveDay ld fd) (resolveTimeOfDay ltod ftod)
+  let withDiff = resolveTimeOfDayWithDiff ltod ftod
+      withoutDiff = (0, resolveTimeOfDay ltod ftod)
+      (d, tod) =
+        case fd of
+          Now -> withDiff
+          Today -> withDiff
+          _ -> withoutDiff
+   in LocalTime (addDays d $ resolveDay ld fd) tod
 
 resolveTimeOfDay :: TimeOfDay -> FuzzyTimeOfDay -> TimeOfDay
-resolveTimeOfDay tod@(TimeOfDay h m s) ftod =
+resolveTimeOfDay tod ftod = snd $ resolveTimeOfDayWithDiff tod ftod
+
+resolveTimeOfDayWithDiff :: TimeOfDay -> FuzzyTimeOfDay -> (Integer, TimeOfDay)
+resolveTimeOfDayWithDiff tod@(TimeOfDay h m s) ftod =
   case ftod of
-    SameTime -> tod
-    Noon -> midday
-    Midnight -> midnight
-    Morning -> morning
-    Evening -> evening
-    AtHour h_ -> TimeOfDay h_ 0 0
-    AtMinute h_ m_ -> TimeOfDay h_ m_ 0
-    AtExact tod_ -> tod_
+    SameTime -> (0, tod)
+    Noon -> next midday
+    Midnight -> next midnight
+    Morning -> next morning
+    Evening -> next evening
+    AtHour h_ -> next $ TimeOfDay h_ 0 0
+    AtMinute h_ m_ -> next $ TimeOfDay h_ m_ 0
+    AtExact tod_ -> next tod_
     HoursDiff hd -> normaliseTimeOfDay $ TimeOfDay (h + hd) m s
     MinutesDiff md -> normaliseTimeOfDay $ TimeOfDay h (m + md) s
     SecondsDiff sd -> normaliseTimeOfDay $ TimeOfDay h m (s + sd)
+  where
+    next tod_ = (skipIf (>= tod_), tod_)
+    skipIf p =
+      if p tod
+        then 1
+        else 0
 
-normaliseTimeOfDay :: TimeOfDay -> TimeOfDay
+normaliseTimeOfDay :: TimeOfDay -> (Integer, TimeOfDay)
 normaliseTimeOfDay (TimeOfDay h m s) =
   let s' = s `mod'` 60
       totalM = m + (round $ s - s') `div` 60
       m' = totalM `mod` 60
       totalH = h + (totalM - m') `div` 60
       h' = totalH `mod` 24
-   in TimeOfDay h' m' s'
+      totalD = totalH - h' `div` 24
+   in (fromIntegral totalD, TimeOfDay h' m' s')
 
 morning :: TimeOfDay
 morning = TimeOfDay 6 0 0

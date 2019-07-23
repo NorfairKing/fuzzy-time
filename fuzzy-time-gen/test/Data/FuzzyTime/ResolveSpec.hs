@@ -20,7 +20,8 @@ spec = do
     it "works the same as resolveLocalTimeOne" $
       forAllValid $ \lt ->
         forAllValid $ \fd ->
-          resolveLocalTime lt (FuzzyLocalTime (One fd)) `shouldBe` OnlyDaySpecified (resolveLocalTimeOne lt fd)
+          resolveLocalTime lt (FuzzyLocalTime (One fd)) `shouldBe`
+          OnlyDaySpecified (resolveLocalTimeOne lt fd)
     it "works the same as resolveLocalTimeOther" $
       forAllValid $ \lt ->
         forAllValid $ \ftod ->
@@ -65,32 +66,85 @@ spec = do
             resolveLocalTimeOther (LocalTime ld tod) Evening `shouldBe`
             LocalTime (addDays 1 ld) evening
     describe "resolveLocalTimeBoth" $ do
-      it "works like resolveDay if the fuzzy time of day is SameTime" $
-        forAllValid $ \lt@(LocalTime ld tod) ->
-          forAllValid $ \fd ->
-            resolveLocalTimeBoth lt fd SameTime `shouldBe` LocalTime (resolveDay ld fd) tod
+      describe "SameTime" $ do
+        it "works like resolveDay if the fuzzy time of day is SameTime" $
+          forAllValid $ \lt@(LocalTime ld tod) ->
+            forAllValid $ \fd ->
+              resolveLocalTimeBoth lt fd SameTime `shouldBe` LocalTime (resolveDay ld fd) tod
+      describe "Yesterday" $ do
+        it "works without diff" $
+          forAllValid $ \lt@(LocalTime ld ltod) ->
+            forAllValid $ \ftod ->
+              resolveLocalTimeBoth lt Yesterday ftod `shouldBe`
+              LocalTime (resolveDay ld Yesterday) (resolveTimeOfDay ltod ftod)
+        it "works for noon yesterday" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Yesterday Noon `shouldBe`
+              LocalTime (addDays (-1) ld) midday
+        it "works for midnight yesterday" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Yesterday Midnight `shouldBe`
+              LocalTime (addDays (-1) ld) midnight
+        it "works for morning yesterday" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Yesterday Morning `shouldBe`
+              LocalTime (addDays (-1) ld) morning
+        it "works for evening yesterday" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Yesterday Evening `shouldBe`
+              LocalTime (addDays (-1) ld) evening
+      describe "Tomorrow" $ do
+        it "works without diff" $
+          forAllValid $ \lt@(LocalTime ld ltod) ->
+            forAllValid $ \ftod ->
+              resolveLocalTimeBoth lt Tomorrow ftod `shouldBe`
+              LocalTime (resolveDay ld Tomorrow) (resolveTimeOfDay ltod ftod)
+        it "works for noon tomorrow" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Tomorrow Noon `shouldBe`
+              LocalTime (addDays 1 ld) midday
+        it "works for midnight tomorrow" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Tomorrow Midnight `shouldBe`
+              LocalTime (addDays 1 ld) midnight
+        it "works for morning tomorrow" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Tomorrow Morning `shouldBe`
+              LocalTime (addDays 1 ld) morning
+        it "works for evening tomorrow" $
+          forAllValid $ \ld ->
+            forAllValid $ \tod ->
+              resolveLocalTimeBoth (LocalTime ld tod) Tomorrow Evening `shouldBe`
+              LocalTime (addDays 1 ld) evening
   describe "normaliseTimeOfDay" $ do
     it "produces valid times of day" $ producesValid normaliseTimeOfDay
     it "works for this example of tomorrow" $
-      normaliseTimeOfDay (TimeOfDay 25 0 0) `shouldBe` TimeOfDay 1 0 0
+      normaliseTimeOfDay (TimeOfDay 25 0 0) `shouldBe` (1, TimeOfDay 1 0 0)
     it "works for this example of tomorrow" $
-      normaliseTimeOfDay (TimeOfDay 23 120 0) `shouldBe` TimeOfDay 1 0 0
+      normaliseTimeOfDay (TimeOfDay 23 120 0) `shouldBe` (1, TimeOfDay 1 0 0)
     it "works for this example of tomorrow" $
-      normaliseTimeOfDay (TimeOfDay 23 0 7200) `shouldBe` TimeOfDay 1 0 0
+      normaliseTimeOfDay (TimeOfDay 23 0 7200) `shouldBe` (1, TimeOfDay 1 0 0)
     it "works for this example of tomorrow" $
-      normaliseTimeOfDay (TimeOfDay 23 120 7200) `shouldBe` TimeOfDay 3 0 0
+      normaliseTimeOfDay (TimeOfDay 23 120 7200) `shouldBe` (1, TimeOfDay 3 0 0)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay (-1) 0 0) `shouldBe` TimeOfDay 23 0 0
+      normaliseTimeOfDay (TimeOfDay (-1) 0 0) `shouldBe` (1, TimeOfDay 23 0 0)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay 0 (-1) 0) `shouldBe` TimeOfDay 23 59 0
+      normaliseTimeOfDay (TimeOfDay 0 (-1) 0) `shouldBe` (-1, TimeOfDay 23 59 0)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay 0 0 (-1)) `shouldBe` TimeOfDay 23 59 59
+      normaliseTimeOfDay (TimeOfDay 0 0 (-1)) `shouldBe` (-1, TimeOfDay 23 59 59)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay 0 0 (-0.01)) `shouldBe` TimeOfDay 23 59 59.99
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.01)) `shouldBe` (-1, TimeOfDay 23 59 59.99)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00001)) `shouldBe` TimeOfDay 23 59 59.99999
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00001)) `shouldBe` (-1, TimeOfDay 23 59 59.99999)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00000001)) `shouldBe` TimeOfDay 23 59 59.99999999
+      normaliseTimeOfDay (TimeOfDay 0 0 (-0.00000001)) `shouldBe` (-1, TimeOfDay 23 59 59.99999999)
   describe "resolveTimeOfDay" $ do
     it "produces valid times of day" $ producesValidsOnValids2 resolveTimeOfDay
     it "works for sametime " $ forAllValid $ \tod -> resolveTimeOfDay tod SameTime `shouldBe` tod
