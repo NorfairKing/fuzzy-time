@@ -22,7 +22,7 @@ import Test.QuickCheck
 import Test.Validity
 
 import Data.FuzzyTime
-import Data.FuzzyTime.FuzzyTypes.Gen ()
+import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
 spec = do
