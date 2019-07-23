@@ -4,11 +4,12 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.FuzzyTime.Parser
-    ( fuzzyZonedTimeP
-    , fuzzyDayP
-    , fuzzyDayOfTheWeekP
-    , Parser
-    ) where
+  ( fuzzyZonedTimeP
+  , fuzzyTimeOfDayP
+  , fuzzyDayP
+  , fuzzyDayOfTheWeekP
+  , Parser
+  ) where
 
 import Data.List
 import Data.Maybe
@@ -31,6 +32,9 @@ type Parser = Parsec Void Text
 fuzzyZonedTimeP :: Parser FuzzyZonedTime
 fuzzyZonedTimeP = pure ZonedNow
 
+fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
+fuzzyTimeOfDayP = undefined
+
 -- | Can handle:
 --
 -- - yesterday
@@ -42,48 +46,41 @@ fuzzyZonedTimeP = pure ZonedNow
 -- and all non-ambiguous prefixes
 fuzzyDayP :: Parser FuzzyDay
 fuzzyDayP =
-    choice
-        [ try $
-          recTreeParser
-              [ ("yesterday", Yesterday)
-              , ("now", Now)
-              , ("today", Today)
-              , ("tomorrow", Tomorrow)
-              ]
-        , try $
-          fmap
-              ExactDay
-              (some (digitChar <|> char '-') >>=
-               parseTimeM True defaultTimeLocale "%Y-%m-%d")
-        , try dayInMonthP
-        , try dayOfTheMonthP
-        , try $ NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
-        , diffDaysP
-        ]
+  choice
+    [ try $
+      recTreeParser
+        [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)]
+    , try $
+      fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+    , try dayInMonthP
+    , try dayOfTheMonthP
+    , try $ NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
+    , diffDaysP
+    ]
 
 dayOfTheMonthP :: Parser FuzzyDay
 dayOfTheMonthP = do
-    v <- OnlyDay <$> Lexer.lexeme Char.space Lexer.decimal
-    guard $ isValid v
-    pure v
+  v <- OnlyDay <$> Lexer.lexeme Char.space Lexer.decimal
+  guard $ isValid v
+  pure v
 
 dayInMonthP :: Parser FuzzyDay
 dayInMonthP = do
-    m <- Lexer.lexeme Char.space Lexer.decimal
-    guard (m >= 1)
-    guard (m <= 12)
-    void $ string "-"
-    d <- Lexer.lexeme Char.space Lexer.decimal
-    let v = DayInMonth m d
-    guard $ isValid v
-    pure v
+  m <- Lexer.lexeme Char.space Lexer.decimal
+  guard (m >= 1)
+  guard (m <= 12)
+  void $ string "-"
+  d <- Lexer.lexeme Char.space Lexer.decimal
+  let v = DayInMonth m d
+  guard $ isValid v
+  pure v
 
 diffDaysP :: Parser FuzzyDay
 diffDaysP =
-    fmap DiffDays $ do
-        d <- Lexer.lexeme Char.space (Lexer.signed Char.space Lexer.decimal)
-        void $ optional $ char 'd'
-        pure d
+  fmap DiffDays $ do
+    d <- Lexer.lexeme Char.space (Lexer.signed Char.space Lexer.decimal)
+    void $ optional $ char 'd'
+    pure d
 
 -- | Can handle:
 --
@@ -98,26 +95,24 @@ diffDaysP =
 -- and all non-ambiguous prefixes
 fuzzyDayOfTheWeekP :: Parser DayOfTheWeek
 fuzzyDayOfTheWeekP =
-    recTreeParser
-        [ ("monday", Monday)
-        , ("tuesday", Tuesday)
-        , ("wednesday", Wednesday)
-        , ("thursday", Thursday)
-        , ("friday", Friday)
-        , ("saturday", Saturday)
-        , ("sunday", Sunday)
-        ]
+  recTreeParser
+    [ ("monday", Monday)
+    , ("tuesday", Tuesday)
+    , ("wednesday", Wednesday)
+    , ("thursday", Thursday)
+    , ("friday", Friday)
+    , ("saturday", Saturday)
+    , ("sunday", Sunday)
+    ]
 
 recTreeParser :: [(String, a)] -> Parser a
 recTreeParser tups = do
-    let pf = makeParseForest tups
-    s <- some letterChar
-    case lookupInParseForest s pf of
-        Nothing ->
-            fail $
-            "Could not parse any of these recursively unambiguously: " ++
-            show (map fst tups)
-        Just f -> pure f
+  let pf = makeParseForest tups
+  s <- some letterChar
+  case lookupInParseForest s pf of
+    Nothing ->
+      fail $ "Could not parse any of these recursively unambiguously: " ++ show (map fst tups)
+    Just f -> pure f
 
 lookupInParseForest :: Eq c => [c] -> Forest (c, Maybe a) -> Maybe a
 lookupInParseForest = gof
@@ -127,12 +122,12 @@ lookupInParseForest = gof
     got :: Eq c => [c] -> Tree (c, Maybe a) -> Maybe a
     got [] _ = Nothing
     got (c:cs) Node {..} =
-        let (tc, tma) = rootLabel
-         in if tc == c
-                then case cs of
-                         [] -> tma
-                         _ -> gof cs subForest
-                else Nothing
+      let (tc, tma) = rootLabel
+       in if tc == c
+            then case cs of
+                   [] -> tma
+                   _ -> gof cs subForest
+            else Nothing
 
 makeParseForest :: Eq c => [([c], a)] -> Forest (c, Maybe a)
 makeParseForest = foldl insertf []
@@ -140,20 +135,16 @@ makeParseForest = foldl insertf []
     insertf :: Eq c => Forest (c, Maybe a) -> ([c], a) -> Forest (c, Maybe a)
     insertf for ([], _) = for
     insertf for (c:cs, a) =
-        case find ((== c) . fst . rootLabel) for of
-            Nothing ->
-                let got [] = Nothing
-                    got (c_:cs_) =
-                        Just $ Node (c_, Just a) $ maybeToList $ got cs_
-                 in case got (c : cs) of
-                        Nothing -> for -- Should not happen, but is fine
-                        Just t -> t : for
-            Just n ->
-                flip map for $ \t ->
-                    let (tc, _) = rootLabel t
-                     in if tc == c
-                            then n
-                                     { rootLabel = (tc, Nothing)
-                                     , subForest = insertf (subForest n) (cs, a)
-                                     }
-                            else t
+      case find ((== c) . fst . rootLabel) for of
+        Nothing ->
+          let got [] = Nothing
+              got (c_:cs_) = Just $ Node (c_, Just a) $ maybeToList $ got cs_
+           in case got (c : cs) of
+                Nothing -> for -- Should not happen, but is fine
+                Just t -> t : for
+        Just n ->
+          flip map for $ \t ->
+            let (tc, _) = rootLabel t
+             in if tc == c
+                  then n {rootLabel = (tc, Nothing), subForest = insertf (subForest n) (cs, a)}
+                  else t
