@@ -5,6 +5,7 @@
 
 module Data.FuzzyTime.Parser
   ( fuzzyZonedTimeP
+  , fuzzyLocalTimeP
   , fuzzyTimeOfDayP
   , atHourP
   , atMinuteP
@@ -37,6 +38,21 @@ type Parser = Parsec Void Text
 
 fuzzyZonedTimeP :: Parser FuzzyZonedTime
 fuzzyZonedTimeP = pure ZonedNow
+
+fuzzyLocalTimeP :: Parser FuzzyLocalTime
+fuzzyLocalTimeP = FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
+
+parseSome :: Parser a -> Parser b -> Parser (Some a b)
+parseSome pa pb =
+  choice'
+    [ do a <- pa
+         mb <- optional (space1 *> pb)
+         pure $
+           case mb of
+             Nothing -> One a
+             Just b -> Both a b
+    , Other <$> pb
+    ]
 
 fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
 fuzzyTimeOfDayP =
@@ -81,7 +97,7 @@ atExactP =
 diffP :: Parser FuzzyTimeOfDay
 diffP =
   label "Diff" $ do
-    n <- signed (pure ()) decimal
+    n <- signed' decimal
     mc <- optional $ choice' [char 'h', char 'm', char 's']
     f <-
       case mc of
@@ -165,7 +181,7 @@ dayInMonthP = do
 diffDaysP :: Parser FuzzyDay
 diffDaysP =
   fmap DiffDays $ do
-    d <- Lexer.lexeme Char.space (Lexer.signed Char.space Lexer.decimal)
+    d <- signed' decimal
     void $ optional $ char 'd'
     pure d
 
@@ -240,3 +256,8 @@ choice' :: [Parser a] -> Parser a
 choice' [] = empty
 choice' [x] = x
 choice' (a:as) = try a <|> choice' as
+
+signed' :: Num a => Parser a -> Parser a
+signed' p = sign <*> p
+  where
+    sign = (id <$ char '+') <|> (negate <$ char '-')

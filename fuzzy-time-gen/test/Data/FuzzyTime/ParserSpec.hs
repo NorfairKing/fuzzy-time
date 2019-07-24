@@ -10,6 +10,7 @@ import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import Data.Void
 import Text.Printf
 
 import Control.Monad
@@ -26,7 +27,52 @@ import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
 spec = do
+  describe "fuzzyLocalTimeP" $ do
+    parsesValidSpec fuzzyLocalTimeP
+    it "works with just a day, just like fuzzyDayP" $
+      equivalentParsers
+        "fuzzyDayP"
+        (FuzzyLocalTime . One <$> fuzzyDayP)
+        "fuzzyLocalTimeP"
+        fuzzyLocalTimeP
+    -- Does not hold.
+    -- it "works with just a time of day, just like fuzzyTimeOfDayP" $
+    --   equivalentParsers
+    --     "fuzzyTimeOfDayP"
+    --     (FuzzyLocalTime . Other <$> fuzzyTimeOfDayP)
+    --     "fuzzyLocalTimeP"
+    --     fuzzyLocalTimeP
+    let p = parseJustSpec fuzzyLocalTimeP
+        pr = parseJustSpecR fuzzyLocalTimeP
+        f = parseNothingSpec fuzzyLocalTimeP
+    p "1" (FuzzyLocalTime $ One $ OnlyDay 1)
+    p "today" (FuzzyLocalTime $ One Today)
+    p "monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
+    p "05:06" (FuzzyLocalTime $ Other $ AtMinute 5 6)
+    p "evening" (FuzzyLocalTime $ Other Evening)
+    p "tues 05:06" (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
+    pr 3 "noon" $ FuzzyLocalTime $ Other Noon
+    pr 4 "midday" $ FuzzyLocalTime $ Other Noon
+    pr 4 "midnight" $ FuzzyLocalTime $ Other Midnight
+    pr 3 "morning" $ FuzzyLocalTime $ Other Morning
+    pr 1 "evening" $ FuzzyLocalTime $ Other Evening
+    p "6:07" $ FuzzyLocalTime $ Other (AtMinute 6 7)
+    p "08:09" $ FuzzyLocalTime $ Other (AtMinute 8 9)
+    p "1011" $ FuzzyLocalTime $ Other (AtMinute 10 11)
+    p "0324" $ FuzzyLocalTime $ Other (AtMinute 3 24)
+    p "23:59:22" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 23 59 22)
+    p "5:06:23" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 5 6 23)
+    p "0506:23" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 5 6 23)
+    p "+5h" $ FuzzyLocalTime $ Other (HoursDiff 5)
+    p "-6h" $ FuzzyLocalTime $ Other (HoursDiff (-6))
+    p "+7m" $ FuzzyLocalTime $ Other (MinutesDiff 7)
+    p "-8m" $ FuzzyLocalTime $ Other (MinutesDiff (-8))
+    p "+9s" $ FuzzyLocalTime $ Other (SecondsDiff 9)
+    p "-10s" $ FuzzyLocalTime $ Other (SecondsDiff (-10))
+    f "hello"
+    f "world"
   describe "twoDigitsSegmentP" $ do
+    parsesValidSpec twoDigitsSegmentP
     let p = parseJustSpec twoDigitsSegmentP
         f = parseNothingSpec twoDigitsSegmentP
     p "0" 0
@@ -37,6 +83,7 @@ spec = do
     f "152"
     f "6:"
   describe "hourSegmentP" $ do
+    parsesValidSpec hourSegmentP
     let p = parseJustSpec hourSegmentP
         f = parseNothingSpec hourSegmentP
     p "0" 0
@@ -48,6 +95,7 @@ spec = do
     f "152"
     f "7:"
   describe "minuteSegmentP" $ do
+    parsesValidSpec minuteSegmentP
     let p = parseJustSpec minuteSegmentP
         f = parseNothingSpec minuteSegmentP
     p "0" 0
@@ -59,6 +107,7 @@ spec = do
     f "152"
     f "8:"
   describe "atHourP" $ do
+    parsesValidSpec atHourP
     let p = parseJustSpec atHourP
         f = parseNothingSpec atHourP
     p "0" (AtHour 0)
@@ -71,6 +120,7 @@ spec = do
     f "6:"
     f "06:"
   describe "atMinuteP" $ do
+    parsesValidSpec atMinuteP
     let p = parseJustSpec atMinuteP
         f = parseNothingSpec atMinuteP
     p "2:52" (AtMinute 2 52)
@@ -80,6 +130,7 @@ spec = do
     f "6:"
     f "06:"
   describe "atExactP" $ do
+    parsesValidSpec atExactP
     let p = parseJustSpec atExactP
         f = parseNothingSpec atExactP
     p "23:59:22" $ AtExact (TimeOfDay 23 59 22)
@@ -112,7 +163,7 @@ spec = do
       p "0506:23" $ AtExact (TimeOfDay 5 6 23)
     describe "HoursDiff" $ do
       p "+3" (HoursDiff 3)
-      p "-4" (HoursDiff  (-4))
+      p "-4" (HoursDiff (-4))
       p "+5h" (HoursDiff 5)
       p "-6h" (HoursDiff (-6))
     describe "MinutesDiff" $ do
@@ -136,11 +187,6 @@ spec = do
     let f = parseNothingSpec fuzzyDayP
     it "parses x as OnlyDay x for x between 1 and 31" $
       forAll (choose (1, 31)) $ \i -> parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
-    s "0" (DiffDays 0)
-    s "0d" (DiffDays 0)
-    it "parses x as DiffDays x for x not 1 and 31" $
-      forAll (genUnchecked `suchThat` (\x -> x < 1 || x > 31)) $ \i ->
-        parseJust fuzzyDayP (T.pack (show i)) (DiffDays i)
     s "+3" (DiffDays 3)
     s "-3" (DiffDays $ -3)
     it "Parses +x as DiffDays x" $
@@ -195,6 +241,21 @@ dayOfTheWeekStrings =
   , (Sunday, 2, "sunday")
   ]
 
+equivalentParsers :: (Show a, Eq a) => String -> Parser a -> String -> Parser a -> Property
+equivalentParsers p1n p1 p2n p2 =
+  forAllValid $ \s ->
+    case (parseForTest p1 s, parseForTest p2 s) of
+      (Right r1, Right r2) -> r1 `shouldBe` r2
+      (Left e, Right r2) ->
+        expectationFailure $
+        unlines
+          [p1n <> " fails with error", parseErrorPretty e, "but " <> p2n <> " parses", show r2]
+      (Right r1, Left e) ->
+        expectationFailure $
+        unlines
+          [p2n <> " fails with error", parseErrorPretty e, "but " <> p1n <> " parses", show r1]
+      (Left _, Left _) -> pure ()
+
 parseJustSpecR :: (Show a, Eq a) => Parser a -> Int -> Text -> a -> Spec
 parseJustSpecR p i t res = mapM_ (\s_ -> parseJustSpec p s_ res) $ drop i $ T.inits t
 
@@ -209,23 +270,26 @@ parsesValidSpec p = it "only parses valid values" $ forAllValid $ parsesValid p
 
 parseJust :: (Show a, Eq a) => Parser a -> Text -> a -> Expectation
 parseJust p s res =
-  case parse (p <* eof) "test input" s of
+  case parseForTest p s of
+    Right out -> out `shouldBe` res
     Left err ->
       expectationFailure $
       unlines ["Parser failed on input", show s, "with error", parseErrorPretty err]
-    Right out -> out `shouldBe` res
 
 parseNothing :: (Show a, Eq a) => Parser a -> Text -> Expectation
 parseNothing p s =
-  case parse (p <* eof) "test input" s of
+  case parseForTest p s of
+    Left _ -> pure ()
     Right v ->
       expectationFailure $
       unlines
         ["Parser succeeded on input", show s, "at parsing", show v, "but it should have failed."]
-    Left _ -> pure ()
 
 parsesValid :: (Show a, Eq a, Validity a) => Parser a -> Text -> Expectation
 parsesValid p s =
-  case parse (p <* eof) "test input" s of
+  case parseForTest p s of
     Left _ -> pure ()
     Right out -> shouldBeValid out
+
+parseForTest :: Parser a -> Text -> Either (ParseError Char Void) a
+parseForTest p s = parse (p <* eof) "test input" s
