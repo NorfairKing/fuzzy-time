@@ -6,6 +6,12 @@
 module Data.FuzzyTime.Parser
   ( fuzzyZonedTimeP
   , fuzzyTimeOfDayP
+  , atHourP
+  , atMinuteP
+  , atExactP
+  , hourSegmentP
+  , minuteSegmentP
+  , twoDigitsSegmentP
   , fuzzyDayP
   , fuzzyDayOfTheWeekP
   , Parser
@@ -33,7 +39,90 @@ fuzzyZonedTimeP :: Parser FuzzyZonedTime
 fuzzyZonedTimeP = pure ZonedNow
 
 fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
-fuzzyTimeOfDayP = undefined
+fuzzyTimeOfDayP =
+  choice'
+    [ recTreeParser
+        [ ("midnight", Midnight)
+        , ("midday", Noon)
+        , ("noon", Noon)
+        , ("morning", Morning)
+        , ("evening", Evening)
+        ]
+    , atExactP
+    , atMinuteP
+    , atHourP
+    , diffP
+    ]
+
+atHourP :: Parser FuzzyTimeOfDay
+atHourP =
+  label "AtHour" $ do
+    h <- hourSegmentP
+    pure $ AtHour h
+
+atMinuteP :: Parser FuzzyTimeOfDay
+atMinuteP =
+  label "AtMinute" $ do
+    h <- hourSegmentP
+    void $ optional $ char ':'
+    m <- minuteSegmentP
+    pure $ AtMinute h m
+
+atExactP :: Parser FuzzyTimeOfDay
+atExactP =
+  label "AtExact" $ do
+    h <- hourSegmentP
+    void $ optional $ char ':'
+    m <- minuteSegmentP
+    void $ char ':'
+    s <- fromInteger <$> decimal
+    pure $ AtExact $ TimeOfDay h m s
+
+diffP :: Parser FuzzyTimeOfDay
+diffP =
+  label "Diff" $ do
+    n <- signed (pure ()) decimal
+    mc <- optional $ choice' [char 'h', char 'm', char 's']
+    f <-
+      case mc of
+        Nothing -> pure HoursDiff
+        Just 'h' -> pure HoursDiff
+        Just 'm' -> pure MinutesDiff
+        Just 's' -> pure (\i -> SecondsDiff $ fromIntegral i)
+        _ -> fail "should not happen."
+    pure $ f n
+
+hourSegmentP :: Parser Int
+hourSegmentP =
+  label "hour segment" $ do
+    h <- twoDigitsSegmentP
+    guard $ h >= 0 && h < 24
+    pure h
+
+minuteSegmentP :: Parser Int
+minuteSegmentP =
+  label "minute segment" $ do
+    m <- twoDigitsSegmentP
+    guard $ m >= 0 && m < 60
+    pure m
+
+twoDigitsSegmentP :: Parser Int
+twoDigitsSegmentP =
+  label "two digit segment" $ do
+    d1 <- digit
+    md2 <- optional digit
+    pure $
+      case md2 of
+        Nothing -> d1
+        Just d2 -> 10 * d1 + d2
+
+digit :: Parser Int
+digit = do
+  let l = ['0' .. '9']
+  c <- oneOf l <?> "digit"
+  case elemIndex c l of
+    Nothing -> fail "Shouldn't happen."
+    Just d -> pure d
 
 -- | Can handle:
 --
@@ -46,15 +135,13 @@ fuzzyTimeOfDayP = undefined
 -- and all non-ambiguous prefixes
 fuzzyDayP :: Parser FuzzyDay
 fuzzyDayP =
-  choice
-    [ try $
-      recTreeParser
+  choice'
+    [ recTreeParser
         [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)]
-    , try $
-      fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-    , try dayInMonthP
-    , try dayOfTheMonthP
-    , try $ NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
+    , fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
+    , dayInMonthP
+    , dayOfTheMonthP
+    , NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
     , diffDaysP
     ]
 
@@ -148,3 +235,8 @@ makeParseForest = foldl insertf []
              in if tc == c
                   then n {rootLabel = (tc, Nothing), subForest = insertf (subForest n) (cs, a)}
                   else t
+
+choice' :: [Parser a] -> Parser a
+choice' [] = empty
+choice' [x] = x
+choice' (a:as) = try a <|> choice' as

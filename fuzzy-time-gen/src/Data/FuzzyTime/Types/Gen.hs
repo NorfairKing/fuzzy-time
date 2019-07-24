@@ -11,6 +11,7 @@ instance (GenUnchecked a, GenUnchecked b) => GenUnchecked (Some a b)
 
 instance (GenValid a, GenValid b) => GenValid (Some a b) where
   genValid = genValidStructurally
+  shrinkValid = shrinkValidStructurally
 
 instance GenUnchecked FuzzyLocalTime
 

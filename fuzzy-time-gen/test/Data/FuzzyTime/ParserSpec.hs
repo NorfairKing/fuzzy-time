@@ -26,13 +26,101 @@ import Data.FuzzyTime.Types.Gen ()
 
 spec :: Spec
 spec = do
+  describe "twoDigitsSegmentP" $ do
+    let p = parseJustSpec twoDigitsSegmentP
+        f = parseNothingSpec twoDigitsSegmentP
+    p "0" 0
+    p "6" 6
+    p "01" 1
+    p "12" 12
+    p "52" 52
+    f "152"
+    f "6:"
+  describe "hourSegmentP" $ do
+    let p = parseJustSpec hourSegmentP
+        f = parseNothingSpec hourSegmentP
+    p "0" 0
+    p "6" 6
+    p "01" 1
+    p "12" 12
+    f "25"
+    f "52"
+    f "152"
+    f "7:"
+  describe "minuteSegmentP" $ do
+    let p = parseJustSpec minuteSegmentP
+        f = parseNothingSpec minuteSegmentP
+    p "0" 0
+    p "6" 6
+    p "01" 1
+    p "12" 12
+    p "25" 25
+    p "52" 52
+    f "152"
+    f "8:"
+  describe "atHourP" $ do
+    let p = parseJustSpec atHourP
+        f = parseNothingSpec atHourP
+    p "0" (AtHour 0)
+    p "2" (AtHour 2)
+    p "23" (AtHour 23)
+    p "08" (AtHour 8)
+    p "04" (AtHour 4)
+    f "26"
+    f "103"
+    f "6:"
+    f "06:"
+  describe "atMinuteP" $ do
+    let p = parseJustSpec atMinuteP
+        f = parseNothingSpec atMinuteP
+    p "2:52" (AtMinute 2 52)
+    p "23:52" (AtMinute 23 52)
+    p "08:15" (AtMinute 08 15)
+    p "0426" (AtMinute 4 26)
+    f "6:"
+    f "06:"
+  describe "atExactP" $ do
+    let p = parseJustSpec atExactP
+        f = parseNothingSpec atExactP
+    p "23:59:22" $ AtExact (TimeOfDay 23 59 22)
+    p "5:06:23" $ AtExact (TimeOfDay 5 6 23)
+    p "0506:23" $ AtExact (TimeOfDay 5 6 23)
+    f "50623"
+    f "050623"
+    f "05:0623"
   describe "fuzzyTimeOfDayP" $ do
     parsesValidSpec fuzzyTimeOfDayP
+    let p = parseJustSpec fuzzyTimeOfDayP
     let pr = parseJustSpecR fuzzyTimeOfDayP
-    pr 1 "noon" Noon
-    pr 1 "midnight" Midnight
-    pr 1 "morning" Morning
-    pr 0 "evening" Evening
+    pr 2 "noon" Noon
+    pr 4 "midday" Noon
+    pr 4 "midnight" Midnight
+    pr 2 "morning" Morning
+    pr 1 "evening" Evening
+    describe "AtHour" $ do
+      p "0" (AtHour 0)
+      p "4" (AtHour 4)
+      p "05" (AtHour 5)
+    describe "AtMinute" $ do
+      p "6:07" (AtMinute 6 7)
+      p "08:09" (AtMinute 8 9)
+      p "1011" (AtMinute 10 11)
+      p "0324" (AtMinute 3 24)
+    describe "AtExact" $ do
+      p "23:59:22" $ AtExact (TimeOfDay 23 59 22)
+      p "5:06:23" $ AtExact (TimeOfDay 5 6 23)
+      p "0506:23" $ AtExact (TimeOfDay 5 6 23)
+    describe "HoursDiff" $ do
+      p "+3" (HoursDiff 3)
+      p "-4" (HoursDiff  (-4))
+      p "+5h" (HoursDiff 5)
+      p "-6h" (HoursDiff (-6))
+    describe "MinutesDiff" $ do
+      p "+7m" (MinutesDiff 7)
+      p "-8m" (MinutesDiff (-8))
+    describe "SecondsDiff" $ do
+      p "+9s" (SecondsDiff 9)
+      p "-10s" (SecondsDiff (-10))
   describe "fuzzyDayP" $ do
     parsesValidSpec fuzzyDayP
     let fd = parseJustSpecR fuzzyDayP
@@ -46,9 +134,10 @@ spec = do
          in parseJust fuzzyDayP t $ ExactDay day
     let s = parseJustSpec fuzzyDayP
     let f = parseNothingSpec fuzzyDayP
-    s "0" (DiffDays 0)
     it "parses x as OnlyDay x for x between 1 and 31" $
       forAll (choose (1, 31)) $ \i -> parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
+    s "0" (DiffDays 0)
+    s "0d" (DiffDays 0)
     it "parses x as DiffDays x for x not 1 and 31" $
       forAll (genUnchecked `suchThat` (\x -> x < 1 || x > 31)) $ \i ->
         parseJust fuzzyDayP (T.pack (show i)) (DiffDays i)
