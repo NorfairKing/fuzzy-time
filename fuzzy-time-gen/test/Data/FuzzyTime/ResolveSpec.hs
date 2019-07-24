@@ -134,7 +134,7 @@ spec = do
     it "works for this example of tomorrow" $
       normaliseTimeOfDay (TimeOfDay 23 120 7200) `shouldBe` (1, TimeOfDay 3 0 0)
     it "works for this example of yesterday" $
-      normaliseTimeOfDay (TimeOfDay (-1) 0 0) `shouldBe` (1, TimeOfDay 23 0 0)
+      normaliseTimeOfDay (TimeOfDay (-1) 0 0) `shouldBe` (-1, TimeOfDay 23 0 0)
     it "works for this example of yesterday" $
       normaliseTimeOfDay (TimeOfDay 0 (-1) 0) `shouldBe` (-1, TimeOfDay 23 59 0)
     it "works for this example of yesterday" $

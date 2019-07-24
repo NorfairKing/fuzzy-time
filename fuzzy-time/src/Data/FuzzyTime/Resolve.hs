@@ -79,7 +79,7 @@ normaliseTimeOfDay (TimeOfDay h m s) =
       m' = totalM `mod` 60
       totalH = h + (totalM - m') `div` 60
       h' = totalH `mod` 24
-      totalD = totalH - h' `div` 24
+      totalD = (totalH - h' )`div` 24
    in (fromIntegral totalD, TimeOfDay h' m' s')
 
 morning :: TimeOfDay
