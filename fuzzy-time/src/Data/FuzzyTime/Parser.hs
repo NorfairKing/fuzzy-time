@@ -40,22 +40,23 @@ fuzzyZonedTimeP :: Parser FuzzyZonedTime
 fuzzyZonedTimeP = pure ZonedNow
 
 fuzzyLocalTimeP :: Parser FuzzyLocalTime
-fuzzyLocalTimeP = FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
+fuzzyLocalTimeP = label "FuzzyLocalTime" $ FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
 
 parseSome :: Parser a -> Parser b -> Parser (Some a b)
 parseSome pa pb =
+  label "Some" $
   choice'
     [ do a <- pa
-         mb <- optional (space1 *> pb)
-         pure $
-           case mb of
-             Nothing -> One a
-             Just b -> Both a b
+         space1
+         b <- pb
+         pure $ Both a b
+    , One <$> pa
     , Other <$> pb
     ]
 
 fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
 fuzzyTimeOfDayP =
+  label "FuzzyTimeOfDay" $
   choice'
     [ recTreeParser
         [ ("midnight", Midnight)
@@ -133,12 +134,13 @@ twoDigitsSegmentP =
         Just d2 -> 10 * d1 + d2
 
 digit :: Parser Int
-digit = do
-  let l = ['0' .. '9']
-  c <- oneOf l <?> "digit"
-  case elemIndex c l of
-    Nothing -> fail "Shouldn't happen."
-    Just d -> pure d
+digit =
+  label "digit" $ do
+    let l = ['0' .. '9']
+    c <- oneOf l
+    case elemIndex c l of
+      Nothing -> fail "Shouldn't happen."
+      Just d -> pure d
 
 -- | Can handle:
 --
@@ -151,6 +153,7 @@ digit = do
 -- and all non-ambiguous prefixes
 fuzzyDayP :: Parser FuzzyDay
 fuzzyDayP =
+  label "FuzzyDay" $
   choice'
     [ recTreeParser
         [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)]
