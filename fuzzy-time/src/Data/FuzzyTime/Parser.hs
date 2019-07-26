@@ -42,10 +42,11 @@ fuzzyZonedTimeP = pure ZonedNow
 fuzzyLocalTimeP :: Parser FuzzyLocalTime
 fuzzyLocalTimeP = label "FuzzyLocalTime" $ FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
 
+-- | Note: Not composable
 parseSome :: Parser a -> Parser b -> Parser (Some a b)
 parseSome pa pb =
   label "Some" $
-  choice'
+  choice''
     [ do a <- pa
          space1
          b <- pb
@@ -255,12 +256,15 @@ makeParseForest = foldl insertf []
                   then n {rootLabel = (tc, Nothing), subForest = insertf (subForest n) (cs, a)}
                   else t
 
+signed' :: Num a => Parser a -> Parser a
+signed' p = sign <*> p
+  where
+    sign = (id <$ char '+') <|> (negate <$ char '-')
+
 choice' :: [Parser a] -> Parser a
 choice' [] = empty
 choice' [x] = x
 choice' (a:as) = try a <|> choice' as
 
-signed' :: Num a => Parser a -> Parser a
-signed' p = sign <*> p
-  where
-    sign = (id <$ char '+') <|> (negate <$ char '-')
+choice'' :: [Parser a] -> Parser a
+choice'' = choice' . map (<* eof)
