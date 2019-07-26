@@ -98,6 +98,7 @@ resolveDay d fd =
     OnlyDay di -> nextDayOnDay d di
     DayInMonth mi di -> nextDayOndayInMonth d mi di
     DiffDays ds -> addDays ds d
+    DiffWeeks ws -> addDays (7* ws) d
     NextDayOfTheWeek dow -> nextDayOfTheWeek d dow
     ExactDay d_ -> d_
 

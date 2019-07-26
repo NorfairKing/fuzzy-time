@@ -210,10 +210,14 @@ spec = do
     s "-3" (DiffDays $ -3)
     it "Parses +x as DiffDays x" $
       forAllUnchecked $ \i -> parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
-    s "+3d" (DiffDays 3)
-    s "-3d" (DiffDays $ -3)
+    s "+4d" (DiffDays 4)
+    s "-4d" (DiffDays $ -4)
     it "Parses +xd as DiffDays x" $
       forAllUnchecked $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
+    s "+5w" (DiffWeeks 5)
+    s "-5w" (DiffWeeks $ -5)
+    it "Parses +xw as DiffWeeks x" $
+      forAllUnchecked $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
     f "0-0"
     s "2-13" (DayInMonth 2 13)
     s "12-3" (DayInMonth 12 3)

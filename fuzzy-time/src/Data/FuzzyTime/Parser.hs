@@ -174,7 +174,7 @@ fuzzyDayP =
     , dayInMonthP
     , dayOfTheMonthP
     , NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
-    , diffDaysP
+    , diffDayP
     ]
 
 dayOfTheMonthP :: Parser FuzzyDay
@@ -194,12 +194,17 @@ dayInMonthP = do
   guard $ isValid v
   pure v
 
-diffDaysP :: Parser FuzzyDay
-diffDaysP =
-  fmap DiffDays $ do
+diffDayP :: Parser FuzzyDay
+diffDayP =
+   do
     d <- signed' decimal
-    void $ optional $ char 'd'
-    pure d
+    mc <-  optional $ oneOf[ 'd', 'w']
+    let f = case mc of
+                  Nothing -> DiffDays
+                  Just 'd' -> DiffDays
+                  Just 'w' -> DiffWeeks
+                  _ -> DiffDays -- Should not happen.
+    pure $ f d
 
 -- | Can handle:
 --
