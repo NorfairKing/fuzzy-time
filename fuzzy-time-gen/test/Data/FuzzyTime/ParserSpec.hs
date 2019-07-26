@@ -66,8 +66,8 @@ spec = do
     p "0506:23" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 5 6 23)
     p "+5h" $ FuzzyLocalTime $ Other (HoursDiff 5)
     p "-6h" $ FuzzyLocalTime $ Other (HoursDiff (-6))
-    p "+7m" $ FuzzyLocalTime $ Other (MinutesDiff 7)
-    p "-8m" $ FuzzyLocalTime $ Other (MinutesDiff (-8))
+    p "+7m" $ FuzzyLocalTime $ One (DiffMonths 7)
+    p "-8m" $ FuzzyLocalTime $ One (DiffMonths (-8))
     p "+9s" $ FuzzyLocalTime $ Other (SecondsDiff 9)
     p "-10s" $ FuzzyLocalTime $ Other (SecondsDiff (-10))
     f "hello"
@@ -218,6 +218,10 @@ spec = do
     s "-5w" (DiffWeeks $ -5)
     it "Parses +xw as DiffWeeks x" $
       forAllUnchecked $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
+    s "+6m" (DiffMonths 6)
+    s "-6m" (DiffMonths $ -6)
+    it "Parses +xw as DiffMonths x" $
+      forAllUnchecked $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dm" i)) (DiffMonths i)
     f "0-0"
     s "2-13" (DayInMonth 2 13)
     s "12-3" (DayInMonth 12 3)

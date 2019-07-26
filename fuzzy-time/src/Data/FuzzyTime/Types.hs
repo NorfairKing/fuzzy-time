@@ -85,6 +85,7 @@ data FuzzyDay
       Int -- ^ The day within the month
   | DiffDays Integer -- ^ The difference in days
   | DiffWeeks Integer -- ^ The difference in weeks
+  | DiffMonths Integer -- ^ The difference in weeks
   | NextDayOfTheWeek DayOfTheWeek
   | ExactDay Day
   deriving (Show, Eq, Generic)

@@ -79,7 +79,7 @@ normaliseTimeOfDay (TimeOfDay h m s) =
       m' = totalM `mod` 60
       totalH = h + (totalM - m') `div` 60
       h' = totalH `mod` 24
-      totalD = (totalH - h' )`div` 24
+      totalD = (totalH - h') `div` 24
    in (fromIntegral totalD, TimeOfDay h' m' s')
 
 morning :: TimeOfDay
@@ -98,7 +98,8 @@ resolveDay d fd =
     OnlyDay di -> nextDayOnDay d di
     DayInMonth mi di -> nextDayOndayInMonth d mi di
     DiffDays ds -> addDays ds d
-    DiffWeeks ws -> addDays (7* ws) d
+    DiffWeeks ws -> addDays (7 * ws) d
+    DiffMonths ms -> addDays (30 * ms) d
     NextDayOfTheWeek dow -> nextDayOfTheWeek d dow
     ExactDay d_ -> d_
 

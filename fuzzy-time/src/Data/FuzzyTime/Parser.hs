@@ -195,16 +195,17 @@ dayInMonthP = do
   pure v
 
 diffDayP :: Parser FuzzyDay
-diffDayP =
-   do
-    d <- signed' decimal
-    mc <-  optional $ oneOf[ 'd', 'w']
-    let f = case mc of
-                  Nothing -> DiffDays
-                  Just 'd' -> DiffDays
-                  Just 'w' -> DiffWeeks
-                  _ -> DiffDays -- Should not happen.
-    pure $ f d
+diffDayP = do
+  d <- signed' decimal
+  mc <- optional $ oneOf ['d', 'w', 'm']
+  let f =
+        case mc of
+          Nothing -> DiffDays
+          Just 'd' -> DiffDays
+          Just 'w' -> DiffWeeks
+          Just 'm' -> DiffMonths
+          _ -> DiffDays -- Should not happen.
+  pure $ f d
 
 -- | Can handle:
 --
