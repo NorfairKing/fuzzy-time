@@ -18,6 +18,7 @@ module Data.FuzzyTime.Parser
   , Parser
   ) where
 
+import Data.Fixed
 import Data.List
 import Data.Maybe
 import Data.Text (Text)
@@ -93,8 +94,19 @@ atExactP =
     void $ optional $ char ':'
     m <- minuteSegmentP
     void $ char ':'
-    s <- fromInteger <$> decimal
+    s <- readSimplePico
     pure $ AtExact $ TimeOfDay h m s
+
+readSimplePico :: Parser Pico
+readSimplePico = do
+  let d = oneOf ['0' .. '9']
+  beforeDot <- some d :: Parser String
+  afterDot <-
+    optional $ do
+      dot <- char '.'
+      r <- some d
+      pure $ dot : r
+  pure $ read $ beforeDot <> fromMaybe "" afterDot
 
 diffP :: Parser FuzzyTimeOfDay
 diffP =

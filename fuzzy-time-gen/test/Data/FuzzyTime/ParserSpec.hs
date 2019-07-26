@@ -162,6 +162,24 @@ spec = do
       p "23:59:22" $ AtExact (TimeOfDay 23 59 22)
       p "5:06:23" $ AtExact (TimeOfDay 5 6 23)
       p "0506:23" $ AtExact (TimeOfDay 5 6 23)
+      p "05:06:23.1" $ AtExact (TimeOfDay 5 6 23.1)
+      p "05:06:23.01" $ AtExact (TimeOfDay 5 6 23.01)
+      p "05:06:23.001" $ AtExact (TimeOfDay 5 6 23.001)
+      p "05:06:23.0001" $ AtExact (TimeOfDay 5 6 23.0001)
+      p "05:06:23.00001" $ AtExact (TimeOfDay 5 6 23.00001)
+      p "05:06:23.000001" $ AtExact (TimeOfDay 5 6 23.000001)
+      p "05:06:23.0000001" $ AtExact (TimeOfDay 5 6 23.0000001)
+      p "05:06:23.00000001" $ AtExact (TimeOfDay 5 6 23.00000001)
+      p "05:06:23.000000001" $ AtExact (TimeOfDay 5 6 23.000000001)
+      p "05:06:23.0000000001" $ AtExact (TimeOfDay 5 6 23.0000000001)
+      p "05:06:23.00000000001" $ AtExact (TimeOfDay 5 6 23.00000000001)
+      p "05:06:23.000000000001" $ AtExact (TimeOfDay 5 6 23.000000000001)
+      it "can parse whatever is rendered" $
+        forAllValid $ \tod ->
+          let s = formatTime defaultTimeLocale "%T%Q" tod
+           in case parseForTest fuzzyTimeOfDayP (T.pack s) of
+                Left e -> expectationFailure $ parseErrorPretty e
+                Right r -> resolveTimeOfDay tod r `shouldBe` tod
     describe "HoursDiff" $ do
       p "+3" (HoursDiff 3)
       p "-4" (HoursDiff (-4))
@@ -256,7 +274,6 @@ dayOfTheWeekStrings =
 --         unlines
 --           [p2n <> " fails with error", parseErrorPretty e, "but " <> p1n <> " parses", show r1]
 --       (Left _, Left _) -> pure ()
-
 parseJustSpecR :: (Show a, Eq a) => Parser a -> Int -> Text -> a -> Spec
 parseJustSpecR p i t res = mapM_ (\s_ -> parseJustSpec p s_ res) $ drop i $ T.inits t
 
