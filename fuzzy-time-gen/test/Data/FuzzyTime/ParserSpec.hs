@@ -29,20 +29,6 @@ spec :: Spec
 spec = do
   describe "fuzzyLocalTimeP" $ do
     parsesValidSpec fuzzyLocalTimeP
-    -- Does not hold
-    -- it "works with just a day, just like fuzzyDayP" $
-    --   equivalentParsers
-    --     "fuzzyDayP"
-    --     (FuzzyLocalTime . One <$> fuzzyDayP)
-    --     "fuzzyLocalTimeP"
-    --     fuzzyLocalTimeP
-    -- Does not hold.
-    -- it "works with just a time of day, just like fuzzyTimeOfDayP" $
-    --   equivalentParsers
-    --     "fuzzyTimeOfDayP"
-    --     (FuzzyLocalTime . Other <$> fuzzyTimeOfDayP)
-    --     "fuzzyLocalTimeP"
-    --     fuzzyLocalTimeP
     let p = parseJustSpec fuzzyLocalTimeP
         pr = parseJustSpecR fuzzyLocalTimeP
         f = parseNothingSpec fuzzyLocalTimeP
@@ -240,7 +226,7 @@ spec = do
                       pure $ T.pack $ concat [ms, "-", ds] :: [Text]
                in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth m d)
     it "parses whatever the fuzzy day parser parses, as the next day of the week" $
-      forAllUnchecked $ \t ->
+      forAllValid $ \t ->
         case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t <*>
              parse (fuzzyDayP <* eof) "test input" t of
           Left _ -> pure ()
@@ -268,20 +254,6 @@ dayOfTheWeekStrings =
   , (Sunday, 2, "sunday")
   ]
 
--- equivalentParsers :: (Show a, Eq a) => String -> Parser a -> String -> Parser a -> Property
--- equivalentParsers p1n p1 p2n p2 =
---   forAllValid $ \s ->
---     case (parseForTest p1 s, parseForTest p2 s) of
---       (Right r1, Right r2) -> r1 `shouldBe` r2
---       (Left e, Right r2) ->
---         expectationFailure $
---         unlines
---           [p1n <> " fails with error", parseErrorPretty e, "but " <> p2n <> " parses", show r2]
---       (Right r1, Left e) ->
---         expectationFailure $
---         unlines
---           [p2n <> " fails with error", parseErrorPretty e, "but " <> p1n <> " parses", show r1]
---       (Left _, Left _) -> pure ()
 parseJustSpecR :: (Show a, Eq a) => Parser a -> Int -> Text -> a -> Spec
 parseJustSpecR p i t res = mapM_ (\s_ -> parseJustSpec p s_ res) $ drop i $ T.inits t
 

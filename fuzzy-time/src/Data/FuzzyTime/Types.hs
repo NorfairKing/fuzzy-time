@@ -44,10 +44,8 @@ data FuzzyTimeOfDay
   | Midnight
   | Morning
   | Evening
-  | AtHour Int -- ^ The hour of the day
-  | AtMinute
-      Int -- ^ The hour of the day
-      Int -- ^ The minute of the day
+  | AtHour Int
+  | AtMinute Int Int
   | AtExact TimeOfDay
   | HoursDiff Int
   | MinutesDiff Int
@@ -79,13 +77,11 @@ data FuzzyDay
   | Now
   | Today
   | Tomorrow
-  | OnlyDay Int -- ^ The day of the month
-  | DayInMonth
-      Int -- ^ The month
-      Int -- ^ The day within the month
-  | DiffDays Integer -- ^ The difference in days
-  | DiffWeeks Integer -- ^ The difference in weeks
-  | DiffMonths Integer -- ^ The difference in weeks
+  | OnlyDay Int
+  | DayInMonth Int Int
+  | DiffDays Integer
+  | DiffWeeks Integer
+  | DiffMonths Integer
   | NextDayOfTheWeek DayOfTheWeek
   | ExactDay Day
   deriving (Show, Eq, Generic)
