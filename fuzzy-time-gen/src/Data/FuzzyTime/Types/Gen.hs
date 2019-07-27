@@ -13,6 +13,11 @@ instance (GenValid a, GenValid b) => GenValid (Some a b) where
   genValid = genValidStructurally
   shrinkValid = shrinkValidStructurally
 
+instance GenUnchecked AmbiguousLocalTime
+
+instance GenValid AmbiguousLocalTime where
+  genValid = genValidStructurally
+
 instance GenUnchecked FuzzyLocalTime
 
 instance GenValid FuzzyLocalTime where
