@@ -164,7 +164,7 @@ spec = do
         forAllValid $ \tod ->
           let s = formatTime defaultTimeLocale "%T%Q" tod
            in case parseForTest fuzzyTimeOfDayP (T.pack s) of
-                Left e -> expectationFailure $ parseErrorPretty e
+                Left e -> expectationFailure $ errorBundlePretty e
                 Right r -> resolveTimeOfDay tod r `shouldBe` tod
     describe "HoursDiff" $ do
       p "+3" (HoursDiff 3)
@@ -272,7 +272,7 @@ parseJust p s res =
     Right out -> out `shouldBe` res
     Left err ->
       expectationFailure $
-      unlines ["Parser failed on input", show s, "with error", parseErrorPretty err]
+      unlines ["Parser failed on input", show s, "with error", errorBundlePretty err]
 
 parseNothing :: (Show a, Eq a) => Parser a -> Text -> Expectation
 parseNothing p s =
@@ -289,5 +289,5 @@ parsesValid p s =
     Left _ -> pure ()
     Right out -> shouldBeValid out
 
-parseForTest :: Parser a -> Text -> Either (ParseError Char Void) a
+parseForTest :: Parser a -> Text -> Either (ParseErrorBundle Text Void) a
 parseForTest p s = parse (p <* eof) "test input" s
