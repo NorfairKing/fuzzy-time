@@ -7,6 +7,8 @@ import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
 
+import Control.DeepSeq
+
 import Data.Time
 
 data FuzzyZonedTime =
@@ -15,12 +17,16 @@ data FuzzyZonedTime =
 
 instance Validity FuzzyZonedTime
 
+instance NFData FuzzyZonedTime
+
 data AmbiguousLocalTime
   = OnlyDaySpecified Day
   | BothTimeAndDay LocalTime
   deriving (Show, Eq, Generic)
 
 instance Validity AmbiguousLocalTime
+
+instance NFData AmbiguousLocalTime
 
 newtype FuzzyLocalTime =
   FuzzyLocalTime
@@ -30,6 +36,8 @@ newtype FuzzyLocalTime =
 
 instance Validity FuzzyLocalTime
 
+instance NFData FuzzyLocalTime
+
 data Some a b
   = One a
   | Other b
@@ -37,6 +45,8 @@ data Some a b
   deriving (Show, Eq, Generic)
 
 instance (Validity a, Validity b) => Validity (Some a b)
+
+instance (NFData a, NFData b) => NFData (Some a b)
 
 data FuzzyTimeOfDay
   = SameTime
@@ -71,6 +81,8 @@ instance Validity FuzzyTimeOfDay where
               ]
           _ -> valid
       ]
+
+instance NFData FuzzyTimeOfDay
 
 data FuzzyDay
   = Yesterday
@@ -110,6 +122,8 @@ instance Validity FuzzyDay where
           _ -> valid
       ]
 
+instance NFData FuzzyDay
+
 data DayOfTheWeek
   = Monday
   | Tuesday
@@ -121,6 +135,8 @@ data DayOfTheWeek
   deriving (Show, Eq, Generic, Enum, Bounded)
 
 instance Validity DayOfTheWeek
+
+instance NFData DayOfTheWeek
 
 data Month
   = January
@@ -144,6 +160,8 @@ numDayOfTheWeek :: Int -> DayOfTheWeek
 numDayOfTheWeek = toEnum . (\x -> x - 1)
 
 instance Validity Month
+
+instance NFData Month
 
 daysInMonth :: Integer -> [(Month, Int)]
 daysInMonth y =

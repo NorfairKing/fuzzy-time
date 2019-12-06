@@ -7,12 +7,13 @@ copyright: ! 'Copyright: (c) 2017-2018 Tom Sydney Kerckhove'
 license: AllRightsReserved
 homepage: https://github.com/NorfairKing/fuzzy-time
 
+dependencies:
+- base >=4.9 && <=5
 
 library:
   source-dirs: src/
   ghc-options: -Wall
   dependencies:
-  - base >=4.9 && <=5
   - containers
   - fuzzy-time
   - genvalidity
@@ -31,7 +32,6 @@ tests:
     - -Wall
     dependencies:
     - QuickCheck
-    - base
     - fuzzy-time
     - fuzzy-time-gen
     - genvalidity
@@ -42,3 +42,18 @@ tests:
     - megaparsec
     - text
     - time
+
+benchmarks:
+  fuzzy-time-bench:
+    main: Bench.hs
+    source-dirs: bench/
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - fuzzy-time
+    - fuzzy-time-gen
+    - genvalidity-criterion
+    - criterion
