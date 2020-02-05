@@ -3,6 +3,7 @@
 module Data.FuzzyTime.Types where
 
 import Data.Fixed
+import Data.Int
 import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
@@ -57,8 +58,8 @@ data FuzzyTimeOfDay
   | AtHour Int
   | AtMinute Int Int
   | AtExact TimeOfDay
-  | HoursDiff Int
-  | MinutesDiff Int
+  | HoursDiff Int16
+  | MinutesDiff Int16
   | SecondsDiff Pico
   deriving (Show, Eq, Generic)
 
@@ -91,9 +92,9 @@ data FuzzyDay
   | Tomorrow
   | OnlyDay Int
   | DayInMonth Int Int
-  | DiffDays Integer
-  | DiffWeeks Integer
-  | DiffMonths Integer
+  | DiffDays Int16
+  | DiffWeeks Int16
+  | DiffMonths Int16
   | NextDayOfTheWeek DayOfTheWeek
   | ExactDay Day
   deriving (Show, Eq, Generic)

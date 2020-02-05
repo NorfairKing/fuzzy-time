@@ -2,7 +2,6 @@ module Data.FuzzyTime.ResolveSpec
   ( spec
   ) where
 
-import Data.Int
 import Data.Time
 
 import Test.Hspec
@@ -186,14 +185,14 @@ spec = do
           resolveTimeOfDay tod1 (AtExact tod2) `shouldBe` tod2
     it "has an inverse with (small) hoursDiff" $
       forAllValid $ \tod ->
-        forAll (fromIntegral <$> (genValid :: Gen Int16)) $ \hd ->
+        forAllValid $ \hd ->
           resolveTimeOfDay
             (resolveTimeOfDay tod (HoursDiff hd))
             (HoursDiff (-hd)) `shouldBe`
           tod
     it "has an inverse with (small) minutesDiff" $
       forAllValid $ \tod ->
-        forAll (fromIntegral <$> (genValid :: Gen Int16)) $ \md ->
+        forAllValid $ \md ->
           resolveTimeOfDay
             (resolveTimeOfDay tod (MinutesDiff md))
             (MinutesDiff (-md)) `shouldBe`

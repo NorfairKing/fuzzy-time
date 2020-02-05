@@ -62,8 +62,8 @@ resolveTimeOfDayWithDiff tod@(TimeOfDay h m s) ftod =
     AtHour h_ -> next $ TimeOfDay h_ 0 0
     AtMinute h_ m_ -> next $ TimeOfDay h_ m_ 0
     AtExact tod_ -> next tod_
-    HoursDiff hd -> normaliseTimeOfDay $ TimeOfDay (h + hd) m s
-    MinutesDiff md -> normaliseTimeOfDay $ TimeOfDay h (m + md) s
+    HoursDiff hd -> normaliseTimeOfDay $ TimeOfDay (h + fromIntegral hd) m s
+    MinutesDiff md -> normaliseTimeOfDay $ TimeOfDay h (m + fromIntegral md) s
     SecondsDiff sd -> normaliseTimeOfDay $ TimeOfDay h m (s + sd)
   where
     next tod_ = (skipIf (>= tod_), tod_)
@@ -97,9 +97,9 @@ resolveDay d fd =
     Tomorrow -> addDays 1 d
     OnlyDay di -> nextDayOnDay d di
     DayInMonth mi di -> nextDayOndayInMonth d mi di
-    DiffDays ds -> addDays ds d
-    DiffWeeks ws -> addDays (7 * ws) d
-    DiffMonths ms -> addDays (30 * ms) d
+    DiffDays ds -> addDays (fromIntegral ds) d
+    DiffWeeks ws -> addDays (7 * fromIntegral ws) d
+    DiffMonths ms -> addDays (30 * fromIntegral ms) d
     NextDayOfTheWeek dow -> nextDayOfTheWeek d dow
     ExactDay d_ -> d_
 
