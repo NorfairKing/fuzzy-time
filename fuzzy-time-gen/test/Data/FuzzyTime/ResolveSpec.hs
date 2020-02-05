@@ -185,14 +185,14 @@ spec = do
           resolveTimeOfDay tod1 (AtExact tod2) `shouldBe` tod2
     it "has an inverse with (small) hoursDiff" $
       forAllValid $ \tod ->
-        forAllValid $ \hd ->
+        forAll (choose (-(24 - 1), (24 - 1))) $ \hd ->
           resolveTimeOfDay
             (resolveTimeOfDay tod (HoursDiff hd))
             (HoursDiff (-hd)) `shouldBe`
           tod
     it "has an inverse with (small) minutesDiff" $
       forAllValid $ \tod ->
-        forAllValid $ \md ->
+        forAll (choose (-(24 * 60 - 1), (24 * 60 - 1))) $ \md ->
           resolveTimeOfDay
             (resolveTimeOfDay tod (MinutesDiff md))
             (MinutesDiff (-md)) `shouldBe`

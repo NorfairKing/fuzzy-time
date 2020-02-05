@@ -58,9 +58,9 @@ data FuzzyTimeOfDay
   | AtHour Int
   | AtMinute Int Int
   | AtExact TimeOfDay
-  | HoursDiff Int16
-  | MinutesDiff Int16
-  | SecondsDiff Pico
+  | HoursDiff Int -- Max 24
+  | MinutesDiff Int -- Max 24 * 60
+  | SecondsDiff Pico -- Max 24 * 60 * 60
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyTimeOfDay where
@@ -79,6 +79,19 @@ instance Validity FuzzyTimeOfDay where
               , declare "The hours are fewer than 24" $ h < 24
               , declare "The minute is positive" $ m >= 0
               , declare "The minutes are fewer than 60" $ m < 60
+              ]
+          HoursDiff hs ->
+            mconcat
+              [declare "The hours difference is no less than 24h" $ abs hs < 24]
+          MinutesDiff ms ->
+            mconcat
+              [ declare "The minutes difference is no less than 1440m" $
+                abs ms < 24 * 60
+              ]
+          SecondsDiff ms ->
+            mconcat
+              [ declare "The seconds difference is no less than 86400s" $
+                abs ms < 24 * 60 * 60
               ]
           _ -> valid
       ]
