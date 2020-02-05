@@ -3,8 +3,8 @@ packages:
 - fuzzy-time
 - fuzzy-time-gen
 extra-deps:
-- git: https://github.com/NorfairKing/validity.git
-  commit: c5a6efb92d96941308f55220a6f42f399acb1951
+- github: NorfairKing/validity
+  commit: 7f1d3d731062d4448aed306f4c5ddc5193f2a1e5
   subdirs:
   - genvalidity
   - genvalidity-aeson
@@ -37,3 +37,10 @@ extra-deps:
   - validity-unordered-containers
   - validity-uuid
   - validity-vector
+
+nix:
+  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/e6b93257b0ba070bd12810eeacbe281396c24316.tar.gz" ]
+  add-gc-roots: true
+  packages:
+  - zlib
+
