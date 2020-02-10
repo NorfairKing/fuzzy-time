@@ -41,6 +41,11 @@ spec = do
     p
       "tues 05:06"
       (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
+    p
+      "tues 5:06"
+      (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
+    p "8 05:06" (FuzzyLocalTime $ Both (OnlyDay 8) (AtMinute 5 6))
+    p "02-07 05:06" (FuzzyLocalTime $ Both (DayInMonth 2 7) (AtMinute 5 6))
     pr 3 "noon" $ FuzzyLocalTime $ Other Noon
     pr 4 "midday" $ FuzzyLocalTime $ Other Noon
     pr 4 "midnight" $ FuzzyLocalTime $ Other Midnight
