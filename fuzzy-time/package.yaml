@@ -6,6 +6,7 @@ maintainer: syd@cs-syd.eu
 copyright: ! 'Copyright: (c) 2017-2020 Tom Sydney Kerckhove'
 license: MIT
 homepage: https://github.com/NorfairKing/fuzzy-time
+description: Fuzzy time types, parsing and resolution
 
 
 library:
