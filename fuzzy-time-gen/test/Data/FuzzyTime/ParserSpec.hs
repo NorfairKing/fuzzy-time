@@ -260,7 +260,7 @@ spec = do
     let fd = parseJustSpecR fuzzyDayOfTheWeekP
     forM_ dayOfTheWeekStrings $ \(dow, ix, s) -> fd ix s dow
 
-dayOfTheWeekStrings :: [(DayOfTheWeek, Int, Text)]
+dayOfTheWeekStrings :: [(DayOfWeek, Int, Text)]
 dayOfTheWeekStrings =
   [ (Monday, 1, "monday")
   , (Tuesday, 2, "tuesday")

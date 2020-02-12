@@ -1,4 +1,4 @@
-resolver: lts-14.20
+resolver: nightly-2020-02-12
 packages:
 - fuzzy-time
 - fuzzy-time-gen
@@ -38,8 +38,8 @@ extra-deps:
   - validity-uuid
   - validity-vector
 
+
 nix:
-  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/e6b93257b0ba070bd12810eeacbe281396c24316.tar.gz" ]
   add-gc-roots: true
   packages:
   - zlib

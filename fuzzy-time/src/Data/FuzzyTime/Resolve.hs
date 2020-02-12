@@ -132,7 +132,7 @@ nextDayOndayInMonth d mi di =
               else go (y + 1)
    in go y_
 
-nextDayOfTheWeek :: Day -> DayOfTheWeek -> Day
+nextDayOfTheWeek :: Day -> DayOfWeek -> Day
 nextDayOfTheWeek d dow =
   let (_, _, i_) = toWeekDate d
       down = dayOfTheWeekNum dow

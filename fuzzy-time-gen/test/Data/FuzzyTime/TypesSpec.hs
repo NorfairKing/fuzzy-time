@@ -20,7 +20,7 @@ spec = do
   genValidSpec @FuzzyTimeOfDay
   eqSpecOnValid @FuzzyDay
   genValidSpec @FuzzyDay
-  eqSpecOnValid @DayOfTheWeek
-  genValidSpec @DayOfTheWeek
+  eqSpecOnValid @DayOfWeek
+  genValidSpec @DayOfWeek
   eqSpecOnValid @Month
   genValidSpec @Month

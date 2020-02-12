@@ -1,6 +1,13 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
-
-module Data.FuzzyTime.Types where
+#if MIN_VERSION_time(1,9,0)
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+#endif
+module Data.FuzzyTime.Types
+  ( module Data.FuzzyTime.Types
+  , DayOfWeek(..)
+  ) where
 
 import Data.Fixed
 import Data.Int
@@ -108,7 +115,7 @@ data FuzzyDay
   | DiffDays Int16
   | DiffWeeks Int16
   | DiffMonths Int16
-  | NextDayOfTheWeek DayOfTheWeek
+  | NextDayOfTheWeek DayOfWeek
   | ExactDay Day
   deriving (Show, Eq, Generic)
 
@@ -137,8 +144,8 @@ instance Validity FuzzyDay where
       ]
 
 instance NFData FuzzyDay
-
-data DayOfTheWeek
+#if !MIN_VERSION_time(1,9,0)
+data DayOfWeek
   = Monday
   | Tuesday
   | Wednesday
@@ -147,11 +154,24 @@ data DayOfTheWeek
   | Saturday
   | Sunday
   deriving (Show, Eq, Generic, Enum, Bounded)
+#else
+deriving instance Generic DayOfWeek
+#endif
+instance NFData DayOfWeek
 
-instance Validity DayOfTheWeek
+instance Validity DayOfWeek
 
-instance NFData DayOfTheWeek
+dayOfTheWeekNum :: DayOfWeek -> Int
+numDayOfTheWeek :: Int -> DayOfWeek
+#if MIN_VERSION_time(1,9,0)
+dayOfTheWeekNum = fromEnum
 
+numDayOfTheWeek = toEnum
+#else
+dayOfTheWeekNum = (+ 1) . fromEnum
+
+numDayOfTheWeek = toEnum . (\x -> x - 1)
+#endif
 data Month
   = January
   | February
@@ -166,12 +186,6 @@ data Month
   | November
   | December
   deriving (Show, Eq, Generic, Enum, Bounded)
-
-dayOfTheWeekNum :: DayOfTheWeek -> Int
-dayOfTheWeekNum = (+ 1) . fromEnum
-
-numDayOfTheWeek :: Int -> DayOfTheWeek
-numDayOfTheWeek = toEnum . (\x -> x - 1)
 
 instance Validity Month
 

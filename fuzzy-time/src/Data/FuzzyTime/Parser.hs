@@ -227,7 +227,7 @@ diffDayP = do
 -- - sunday
 --
 -- and all non-ambiguous prefixes
-fuzzyDayOfTheWeekP :: Parser DayOfTheWeek
+fuzzyDayOfTheWeekP :: Parser DayOfWeek
 fuzzyDayOfTheWeekP =
   recTreeParser
     [ ("monday", Monday)

@@ -1,5 +1,5 @@
 .stack-work/
-stack.yaml.lock
+*.lock
 result*
 *.cabal
 *.css

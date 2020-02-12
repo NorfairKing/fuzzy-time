@@ -65,9 +65,9 @@ instance GenValid FuzzyDay where
     isValid
   shrinkValid = shrinkValidStructurally
 
-instance GenUnchecked DayOfTheWeek
+instance GenUnchecked DayOfWeek
 
-instance GenValid DayOfTheWeek where
+instance GenValid DayOfWeek where
   genValid = genValidStructurally
   shrinkValid = shrinkValidStructurally
 
