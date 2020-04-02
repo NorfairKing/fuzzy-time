@@ -41,9 +41,7 @@ fuzzyZonedTimeP :: Parser FuzzyZonedTime
 fuzzyZonedTimeP = pure ZonedNow
 
 fuzzyLocalTimeP :: Parser FuzzyLocalTime
-fuzzyLocalTimeP =
-  label "FuzzyLocalTime" $
-  FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
+fuzzyLocalTimeP = label "FuzzyLocalTime" $ FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
 
 -- | Note: Not composable
 parseSome :: Parser a -> Parser b -> Parser (Some a b)
@@ -85,7 +83,6 @@ atMinuteP :: Parser FuzzyTimeOfDay
 atMinuteP =
   label "AtMinute" $ do
     h <- hourSegmentP
-    void $ optional $ char ':'
     m <- minuteSegmentP
     pure $ AtMinute h m
 
@@ -93,7 +90,6 @@ atExactP :: Parser FuzzyTimeOfDay
 atExactP =
   label "AtExact" $ do
     h <- hourSegmentP
-    void $ optional $ char ':'
     m <- minuteSegmentP
     void $ char ':'
     s <- readSimplePico
@@ -129,6 +125,7 @@ hourSegmentP =
   label "hour segment" $ do
     h <- twoDigitsSegmentP
     guard $ h >= 0 && h < 24
+    void $ optional $ char ':'
     pure h
 
 minuteSegmentP :: Parser Int
@@ -171,15 +168,8 @@ fuzzyDayP =
   label "FuzzyDay" $
   choice'
     [ recTreeParser
-        [ ("yesterday", Yesterday)
-        , ("now", Now)
-        , ("today", Today)
-        , ("tomorrow", Tomorrow)
-        ]
-    , fmap
-        ExactDay
-        (some (digitChar <|> char '-') >>=
-         parseTimeM True defaultTimeLocale "%Y-%m-%d")
+        [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)]
+    , fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
     , dayInMonthP
     , dayOfTheMonthP
     , NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
@@ -245,9 +235,7 @@ recTreeParser tups = do
   s <- some letterChar
   case lookupInParseForest s pf of
     Nothing ->
-      fail $
-      "Could not parse any of these recursively unambiguously: " ++
-      show (map fst tups)
+      fail $ "Could not parse any of these recursively unambiguously: " ++ show (map fst tups)
     Just f -> pure f
 
 lookupInParseForest :: Eq c => [c] -> Forest (c, Maybe a) -> Maybe a
@@ -282,10 +270,7 @@ makeParseForest = foldl insertf []
           flip map for $ \t ->
             let (tc, _) = rootLabel t
              in if tc == c
-                  then n
-                         { rootLabel = (tc, Nothing)
-                         , subForest = insertf (subForest n) (cs, a)
-                         }
+                  then n {rootLabel = (tc, Nothing), subForest = insertf (subForest n) (cs, a)}
                   else t
 
 signed' :: Num a => Parser a -> Parser a
