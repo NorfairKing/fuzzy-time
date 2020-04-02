@@ -36,14 +36,17 @@ spec = do
     p "1" (FuzzyLocalTime $ One $ OnlyDay 1)
     p "today" (FuzzyLocalTime $ One Today)
     p "monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
+    p "8:" (FuzzyLocalTime $ Other $ AtHour 8)
+    p "09:" (FuzzyLocalTime $ Other $ AtHour 9)
     p "05:06" (FuzzyLocalTime $ Other $ AtMinute 5 6)
     p "evening" (FuzzyLocalTime $ Other Evening)
     p
       "tues 05:06"
       (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
     p
-      "tues 5:06"
-      (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
+      "wed 5:06"
+      (FuzzyLocalTime $ Both (NextDayOfTheWeek Wednesday) (AtMinute 5 6))
+    p "thu 11:" (FuzzyLocalTime $ Both (NextDayOfTheWeek Thursday) (AtHour 11))
     p "8 05:06" (FuzzyLocalTime $ Both (OnlyDay 8) (AtMinute 5 6))
     p "02-07 05:06" (FuzzyLocalTime $ Both (DayInMonth 2 7) (AtMinute 5 6))
     pr 3 "noon" $ FuzzyLocalTime $ Other Noon
@@ -147,6 +150,8 @@ spec = do
       p "0" (AtHour 0)
       p "4" (AtHour 4)
       p "05" (AtHour 5)
+      p "6:" (AtHour 6)
+      p "07:" (AtHour 7)
     describe "AtMinute" $ do
       p "6:07" (AtMinute 6 7)
       p "08:09" (AtMinute 8 9)
