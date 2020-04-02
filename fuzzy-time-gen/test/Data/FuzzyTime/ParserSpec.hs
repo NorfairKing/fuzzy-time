@@ -223,6 +223,9 @@ spec = do
     s "02-13" (DayInMonth 2 13)
     s "12-03" (DayInMonth 12 3)
     s "02-03" (DayInMonth 2 3)
+    f "002-03"
+    f "02-003"
+    f "002-003"
     modifyMaxSuccess (\x -> (x * (365 * 4)) `div` 100) $
       it "parses m-d (in any format) as DayInMonth" $
       forAll (elements $ daysInMonth 2004) $ \(month, mds) ->
