@@ -178,17 +178,17 @@ fuzzyDayP =
 
 dayOfTheMonthP :: Parser FuzzyDay
 dayOfTheMonthP = do
-  v <- OnlyDay <$> Lexer.lexeme (pure ()) Lexer.decimal
+  v <- OnlyDay <$> twoDigitsSegmentP
   guard $ isValid v
   pure v
 
 dayInMonthP :: Parser FuzzyDay
 dayInMonthP = do
-  m <- Lexer.lexeme (pure ()) Lexer.decimal
+  m <- twoDigitsSegmentP
   guard (m >= 1)
   guard (m <= 12)
   void $ string "-"
-  d <- Lexer.lexeme (pure ()) Lexer.decimal
+  d <- twoDigitsSegmentP
   let v = DayInMonth m d
   guard $ isValid v
   pure v
