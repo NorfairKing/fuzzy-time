@@ -62,9 +62,9 @@ resolveTimeOfDayWithDiff tod@(TimeOfDay h m s) ftod =
     AtHour h_ -> next $ TimeOfDay h_ 0 0
     AtMinute h_ m_ -> next $ TimeOfDay h_ m_ 0
     AtExact tod_ -> next tod_
-    HoursDiff hd -> normaliseTimeOfDay $ TimeOfDay (h + fromIntegral hd) m s
-    MinutesDiff md -> normaliseTimeOfDay $ TimeOfDay h (m + fromIntegral md) s
-    SecondsDiff sd -> normaliseTimeOfDay $ TimeOfDay h m (s + sd)
+    HoursDiff hd -> normaliseTimeOfDay (h + fromIntegral hd) m s
+    MinutesDiff md -> normaliseTimeOfDay h (m + fromIntegral md) s
+    SecondsDiff sd -> normaliseTimeOfDay h m (s + sd)
   where
     next tod_ = (skipIf (>= tod_), tod_)
     skipIf p =
@@ -72,8 +72,8 @@ resolveTimeOfDayWithDiff tod@(TimeOfDay h m s) ftod =
         then 1
         else 0
 
-normaliseTimeOfDay :: TimeOfDay -> (Integer, TimeOfDay)
-normaliseTimeOfDay (TimeOfDay h m s) =
+normaliseTimeOfDay :: Int -> Int -> Pico -> (Integer, TimeOfDay)
+normaliseTimeOfDay h m s =
   let s' = s `mod'` 60
       totalM = m + (round $ s - s') `div` 60
       m' = totalM `mod` 60
