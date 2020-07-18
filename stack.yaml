@@ -4,7 +4,7 @@ packages:
 - fuzzy-time-gen
 extra-deps:
 - git: https://github.com/NorfairKing/validity.git
-  commit: 0c0804d694b4312c0ede00424b978084160e6eb6
+  commit: 10c3b06dc45ce5edfc565abfba564140512efe92
   subdirs:
   - genvalidity
   - genvalidity-aeson
