@@ -1,10 +1,10 @@
-resolver: lts-14.20
+resolver: lts-15.15
 packages:
 - fuzzy-time
 - fuzzy-time-gen
 extra-deps:
 - git: https://github.com/NorfairKing/validity.git
-  commit: 10c3b06dc45ce5edfc565abfba564140512efe92
+  commit: 40bb966d7de744bf1defa7fc510d49d9b994ebec
   subdirs:
   - genvalidity
   - genvalidity-aeson
@@ -39,7 +39,7 @@ extra-deps:
   - validity-vector
 
 nix:
-  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/e6b93257b0ba070bd12810eeacbe281396c24316.tar.gz" ]
+  path: [ "nixpkgs=https://github.com/NixOS/nixpkgs/archive/e3a2247046d4de66b9b193a6ab3ff040fa3da86d.tar.gz" ]
   add-gc-roots: true
   packages:
   - zlib

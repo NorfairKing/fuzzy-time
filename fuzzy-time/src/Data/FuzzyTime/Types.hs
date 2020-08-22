@@ -159,8 +159,6 @@ deriving instance Generic DayOfWeek
 #endif
 instance NFData DayOfWeek
 
-instance Validity DayOfWeek
-
 dayOfTheWeekNum :: DayOfWeek -> Int
 numDayOfTheWeek :: Int -> DayOfWeek
 #if MIN_VERSION_time(1,9,0)
