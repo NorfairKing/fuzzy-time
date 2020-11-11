@@ -1,6 +1,5 @@
 .stack-work/
 *.lock
 result*
-*.cabal
 *.css
 *.js
