@@ -1,24 +1,28 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.FuzzyTime.Parser
-  ( fuzzyZonedTimeP
-  , fuzzyLocalTimeP
-  , fuzzyTimeOfDayP
-  , atHourP
-  , atMinuteP
-  , atExactP
-  , hourSegmentP
-  , minuteSegmentP
-  , twoDigitsSegmentP
-  , fuzzyDayP
-  , fuzzyDayOfTheWeekP
-  , Parser
-  ) where
+  ( fuzzyZonedTimeP,
+    fuzzyLocalTimeP,
+    fuzzyTimeOfDayP,
+    atHourP,
+    atMinuteP,
+    atExactP,
+    hourSegmentP,
+    minuteSegmentP,
+    twoDigitsSegmentP,
+    fuzzyDayP,
+    fuzzyDayOfTheWeekP,
+    Parser,
+  )
+where
 
+import Control.Monad
+import Data.Char as Char
 import Data.Fixed
+import Data.FuzzyTime.Types
 import Data.List
 import Data.Maybe
 import Data.Text (Text)
@@ -26,14 +30,9 @@ import Data.Time
 import Data.Tree
 import Data.Validity
 import Data.Void
-
-import Control.Monad
-
 import Text.Megaparsec
 import Text.Megaparsec.Char as Char
 import Text.Megaparsec.Char.Lexer as Lexer
-
-import Data.FuzzyTime.Types
 
 type Parser = Parsec Void Text
 
@@ -47,31 +46,32 @@ fuzzyLocalTimeP = label "FuzzyLocalTime" $ FuzzyLocalTime <$> parseSome fuzzyDay
 parseSome :: Parser a -> Parser b -> Parser (Some a b)
 parseSome pa pb =
   label "Some" $
-  choice''
-    [ do a <- pa
-         space1
-         b <- pb
-         pure $ Both a b
-    , One <$> pa
-    , Other <$> pb
-    ]
+    choice''
+      [ do
+          a <- pa
+          space1
+          b <- pb
+          pure $ Both a b,
+        One <$> pa,
+        Other <$> pb
+      ]
 
 fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
 fuzzyTimeOfDayP =
   label "FuzzyTimeOfDay" $
-  choice'
-    [ recTreeParser
-        [ ("midnight", Midnight)
-        , ("midday", Noon)
-        , ("noon", Noon)
-        , ("morning", Morning)
-        , ("evening", Evening)
-        ]
-    , atExactP
-    , atMinuteP
-    , atHourP
-    , diffP
-    ]
+    choice'
+      [ recTreeParser
+          [ ("midnight", Midnight),
+            ("midday", Noon),
+            ("noon", Noon),
+            ("morning", Morning),
+            ("evening", Evening)
+          ],
+        atExactP,
+        atMinuteP,
+        atHourP,
+        diffP
+      ]
 
 atHourP :: Parser FuzzyTimeOfDay
 atHourP =
@@ -166,15 +166,15 @@ digit =
 fuzzyDayP :: Parser FuzzyDay
 fuzzyDayP =
   label "FuzzyDay" $
-  choice'
-    [ recTreeParser
-        [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)]
-    , fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d")
-    , dayInMonthP
-    , dayOfTheMonthP
-    , NextDayOfTheWeek <$> fuzzyDayOfTheWeekP
-    , diffDayP
-    ]
+    choice'
+      [ recTreeParser
+          [("yesterday", Yesterday), ("now", Now), ("today", Today), ("tomorrow", Tomorrow)],
+        fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"),
+        dayInMonthP,
+        dayOfTheMonthP,
+        NextDayOfTheWeek <$> fuzzyDayOfTheWeekP,
+        diffDayP
+      ]
 
 dayOfTheMonthP :: Parser FuzzyDay
 dayOfTheMonthP = do
@@ -220,13 +220,13 @@ diffDayP = do
 fuzzyDayOfTheWeekP :: Parser DayOfWeek
 fuzzyDayOfTheWeekP =
   recTreeParser
-    [ ("monday", Monday)
-    , ("tuesday", Tuesday)
-    , ("wednesday", Wednesday)
-    , ("thursday", Thursday)
-    , ("friday", Friday)
-    , ("saturday", Saturday)
-    , ("sunday", Sunday)
+    [ ("monday", Monday),
+      ("tuesday", Tuesday),
+      ("wednesday", Wednesday),
+      ("thursday", Thursday),
+      ("friday", Friday),
+      ("saturday", Saturday),
+      ("sunday", Sunday)
     ]
 
 recTreeParser :: [(String, a)] -> Parser a
@@ -238,19 +238,19 @@ recTreeParser tups = do
       fail $ "Could not parse any of these recursively unambiguously: " ++ show (map fst tups)
     Just f -> pure f
 
-lookupInParseForest :: Eq c => [c] -> Forest (c, Maybe a) -> Maybe a
+lookupInParseForest :: [Char] -> Forest (Char, Maybe a) -> Maybe a
 lookupInParseForest = gof
   where
-    gof :: Eq c => [c] -> Forest (c, Maybe a) -> Maybe a
+    gof :: [Char] -> Forest (Char, Maybe a) -> Maybe a
     gof cs = msum . map (got cs)
-    got :: Eq c => [c] -> Tree (c, Maybe a) -> Maybe a
+    got :: [Char] -> Tree (Char, Maybe a) -> Maybe a
     got [] _ = Nothing
-    got (c:cs) Node {..} =
+    got (c : cs) Node {..} =
       let (tc, tma) = rootLabel
-       in if tc == c
+       in if Char.toLower tc == Char.toLower c
             then case cs of
-                   [] -> tma
-                   _ -> gof cs subForest
+              [] -> tma
+              _ -> gof cs subForest
             else Nothing
 
 makeParseForest :: Eq c => [([c], a)] -> Forest (c, Maybe a)
@@ -258,11 +258,11 @@ makeParseForest = foldl insertf []
   where
     insertf :: Eq c => Forest (c, Maybe a) -> ([c], a) -> Forest (c, Maybe a)
     insertf for ([], _) = for
-    insertf for (c:cs, a) =
+    insertf for (c : cs, a) =
       case find ((== c) . fst . rootLabel) for of
         Nothing ->
           let got [] = Nothing
-              got (c_:cs_) = Just $ Node (c_, Just a) $ maybeToList $ got cs_
+              got (c_ : cs_) = Just $ Node (c_, Just a) $ maybeToList $ got cs_
            in case got (c : cs) of
                 Nothing -> for -- Should not happen, but is fine
                 Just t -> t : for
@@ -281,7 +281,7 @@ signed' p = sign <*> p
 choice' :: [Parser a] -> Parser a
 choice' [] = empty
 choice' [x] = x
-choice' (a:as) = try a <|> choice' as
+choice' (a : as) = try a <|> choice' as
 
 choice'' :: [Parser a] -> Parser a
 choice'' = choice' . map (<* eof)

@@ -2,9 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Data.FuzzyTime.ParserSpec
-  ( spec
-  ) where
+  ( spec,
+  )
+where
 
+import Control.Monad
+import Data.FuzzyTime
+import Data.FuzzyTime.Types.Gen ()
 import Data.GenValidity.Text ()
 import Data.Int
 import Data.List (nub)
@@ -12,19 +16,12 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Data.Void
-import Text.Printf
-
-import Control.Monad
-
-import Text.Megaparsec
-
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
 import Test.Validity
-
-import Data.FuzzyTime
-import Data.FuzzyTime.Types.Gen ()
+import Text.Megaparsec
+import Text.Printf
 
 spec :: Spec
 spec = do
@@ -35,7 +32,11 @@ spec = do
         f = parseNothingSpec fuzzyLocalTimeP
     p "1" (FuzzyLocalTime $ One $ OnlyDay 1)
     p "today" (FuzzyLocalTime $ One Today)
+    p "Today" (FuzzyLocalTime $ One Today)
+    p "TodAY" (FuzzyLocalTime $ One Today)
     p "monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
+    p "Monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
+    p "MoNDay" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
     p "8:" (FuzzyLocalTime $ Other $ AtHour 8)
     p "09:" (FuzzyLocalTime $ Other $ AtHour 9)
     p "05:06" (FuzzyLocalTime $ Other $ AtMinute 5 6)
@@ -46,10 +47,15 @@ spec = do
     p "8 05:06" (FuzzyLocalTime $ Both (OnlyDay 8) (AtMinute 5 6))
     p "02-07 05:06" (FuzzyLocalTime $ Both (DayInMonth 2 7) (AtMinute 5 6))
     pr 3 "noon" $ FuzzyLocalTime $ Other Noon
+    pr 3 "Noon" $ FuzzyLocalTime $ Other Noon
     pr 4 "midday" $ FuzzyLocalTime $ Other Noon
+    pr 4 "Midday" $ FuzzyLocalTime $ Other Noon
     pr 4 "midnight" $ FuzzyLocalTime $ Other Midnight
+    pr 4 "Midnight" $ FuzzyLocalTime $ Other Midnight
     pr 3 "morning" $ FuzzyLocalTime $ Other Morning
+    pr 3 "Morning" $ FuzzyLocalTime $ Other Morning
     pr 1 "evening" $ FuzzyLocalTime $ Other Evening
+    pr 1 "Evening" $ FuzzyLocalTime $ Other Evening
     p "6:07" $ FuzzyLocalTime $ Other (AtMinute 6 7)
     p "08:09" $ FuzzyLocalTime $ Other (AtMinute 8 9)
     p "1011" $ FuzzyLocalTime $ Other (AtMinute 10 11)
@@ -228,19 +234,19 @@ spec = do
     f "002-003"
     modifyMaxSuccess (\x -> (x * (365 * 4)) `div` 100) $
       it "parses m-d (in any format) as DayInMonth" $
-      forAll (elements $ daysInMonth 2004) $ \(month, mds) ->
-        let m = monthNum month
-         in forAll (choose (1, mds)) $ \d ->
-              let options =
-                    nub $ do
-                      ms <- [printf "%d" m, printf "%02d" m]
-                      ds <- [printf "%d" d, printf "%02d" d]
-                      pure $ T.pack $ concat [ms, "-", ds] :: [Text]
-               in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth m d)
+        forAll (elements $ daysInMonth 2004) $ \(month, mds) ->
+          let m = monthNum month
+           in forAll (choose (1, mds)) $ \d ->
+                let options =
+                      nub $ do
+                        ms <- [printf "%d" m, printf "%02d" m]
+                        ds <- [printf "%d" d, printf "%02d" d]
+                        pure $ T.pack $ concat [ms, "-", ds] :: [Text]
+                 in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth m d)
     it "parses whatever the fuzzy day parser parses, as the next day of the week" $
       forAllValid $ \t ->
-        case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t <*>
-             parse (fuzzyDayP <* eof) "test input" t of
+        case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t
+          <*> parse (fuzzyDayP <* eof) "test input" t of
           Left _ -> pure ()
           Right (dow, fd_) ->
             case fd_ of
@@ -257,13 +263,20 @@ spec = do
 
 dayOfTheWeekStrings :: [(DayOfWeek, Int, Text)]
 dayOfTheWeekStrings =
-  [ (Monday, 1, "monday")
-  , (Tuesday, 2, "tuesday")
-  , (Wednesday, 1, "wednesday")
-  , (Thursday, 2, "thursday")
-  , (Friday, 1, "friday")
-  , (Saturday, 2, "saturday")
-  , (Sunday, 2, "sunday")
+  [ (Monday, 1, "monday"),
+    (Monday, 1, "Monday"),
+    (Tuesday, 2, "tuesday"),
+    (Tuesday, 2, "Tuesday"),
+    (Wednesday, 1, "wednesday"),
+    (Wednesday, 1, "Wednesday"),
+    (Thursday, 2, "thursday"),
+    (Thursday, 2, "Thursday"),
+    (Friday, 1, "friday"),
+    (Friday, 1, "Friday"),
+    (Saturday, 2, "saturday"),
+    (Saturday, 2, "Saturday"),
+    (Sunday, 2, "sunday"),
+    (Sunday, 2, "Sunday")
   ]
 
 parseJustSpecR :: (Show a, Eq a) => Parser a -> Int -> Text -> a -> Spec
@@ -284,7 +297,7 @@ parseJust p s res =
     Right out -> out `shouldBe` res
     Left err ->
       expectationFailure $
-      unlines ["Parser failed on input", show s, "with error", errorBundlePretty err]
+        unlines ["Parser failed on input", show s, "with error", errorBundlePretty err]
 
 parseNothing :: (Show a, Eq a) => Parser a -> Text -> Expectation
 parseNothing p s =
@@ -292,8 +305,8 @@ parseNothing p s =
     Left _ -> pure ()
     Right v ->
       expectationFailure $
-      unlines
-        ["Parser succeeded on input", show s, "at parsing", show v, "but it should have failed."]
+        unlines
+          ["Parser succeeded on input", show s, "at parsing", show v, "but it should have failed."]
 
 parsesValid :: (Show a, Eq a, Validity a) => Parser a -> Text -> Expectation
 parsesValid p s =
