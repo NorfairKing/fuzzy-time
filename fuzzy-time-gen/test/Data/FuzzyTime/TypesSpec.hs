@@ -1,26 +1,24 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Data.FuzzyTime.TypesSpec
-  ( spec
-  ) where
-
-import Test.Hspec
-import Test.Validity
+  ( spec,
+  )
+where
 
 import Data.FuzzyTime
 import Data.FuzzyTime.Types.Gen ()
+import Test.Hspec
+import Test.Validity
 
 spec :: Spec
 spec = do
-  eqSpecOnValid @FuzzyLocalTime
+  eqSpec @FuzzyLocalTime
   genValidSpec @FuzzyLocalTime
-  eqSpecOnValid @FuzzyTimeOfDay
+  eqSpec @FuzzyTimeOfDay
   genValidSpec @FuzzyTimeOfDay
-  eqSpecOnValid @FuzzyDay
+  eqSpec @FuzzyDay
   genValidSpec @FuzzyDay
-  eqSpecOnValid @DayOfWeek
+  eqSpec @DayOfWeek
   genValidSpec @DayOfWeek
-  eqSpecOnValid @Month
+  eqSpec @Month
   genValidSpec @Month

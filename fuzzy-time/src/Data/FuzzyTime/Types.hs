@@ -1,26 +1,23 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
-#if MIN_VERSION_time(1,9,0)
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-#endif
-module Data.FuzzyTime.Types
-  ( module Data.FuzzyTime.Types
-  , DayOfWeek(..)
-  ) where
 
+module Data.FuzzyTime.Types
+  ( module Data.FuzzyTime.Types,
+    DayOfWeek (..),
+  )
+where
+
+import Control.DeepSeq
 import Data.Fixed
 import Data.Int
+import Data.Time
 import Data.Validity
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
 
-import Control.DeepSeq
-
-import Data.Time
-
-data FuzzyZonedTime =
-  ZonedNow
+data FuzzyZonedTime
+  = ZonedNow
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyZonedTime
@@ -36,10 +33,9 @@ instance Validity AmbiguousLocalTime
 
 instance NFData AmbiguousLocalTime
 
-newtype FuzzyLocalTime =
-  FuzzyLocalTime
-    { unFuzzyLocalTime :: Some FuzzyDay FuzzyTimeOfDay
-    }
+newtype FuzzyLocalTime = FuzzyLocalTime
+  { unFuzzyLocalTime :: Some FuzzyDay FuzzyTimeOfDay
+  }
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyLocalTime
@@ -73,19 +69,19 @@ data FuzzyTimeOfDay
 instance Validity FuzzyTimeOfDay where
   validate ftod =
     mconcat
-      [ genericValidate ftod
-      , case ftod of
+      [ genericValidate ftod,
+        case ftod of
           AtHour h ->
             mconcat
-              [ declare "The hour is positive" $ h >= 0
-              , declare "The hours are fewer than 24" $ h < 24
+              [ declare "The hour is positive" $ h >= 0,
+                declare "The hours are fewer than 24" $ h < 24
               ]
           AtMinute h m ->
             mconcat
-              [ declare "The hour is positive" $ h >= 0
-              , declare "The hours are fewer than 24" $ h < 24
-              , declare "The minute is positive" $ m >= 0
-              , declare "The minutes are fewer than 60" $ m < 60
+              [ declare "The hour is positive" $ h >= 0,
+                declare "The hours are fewer than 24" $ h < 24,
+                declare "The minute is positive" $ m >= 0,
+                declare "The minutes are fewer than 60" $ m < 60
               ]
           HoursDiff hs ->
             mconcat
@@ -93,12 +89,12 @@ instance Validity FuzzyTimeOfDay where
           MinutesDiff ms ->
             mconcat
               [ declare "The minutes difference is no less than 1440m" $
-                abs ms < 24 * 60
+                  abs ms < 24 * 60
               ]
           SecondsDiff ms ->
             mconcat
               [ declare "The seconds difference is no less than 86400s" $
-                abs ms < 24 * 60 * 60
+                  abs ms < 24 * 60 * 60
               ]
           _ -> valid
       ]
@@ -122,54 +118,39 @@ data FuzzyDay
 instance Validity FuzzyDay where
   validate fd =
     mconcat
-      [ genericValidate fd
-      , case fd of
+      [ genericValidate fd,
+        case fd of
           OnlyDay di ->
             decorate "OnlyDay" $
-            mconcat
-              [ declare "The day is strictly positive" $ di >= 1
-              , declare "The day is less than or equal to 31" $ di <= 31
-              ]
+              mconcat
+                [ declare "The day is strictly positive" $ di >= 1,
+                  declare "The day is less than or equal to 31" $ di <= 31
+                ]
           DayInMonth mi di ->
             decorate "DayInMonth" $
-            mconcat
-              [ declare "The day is strictly positive" $ di >= 1
-              , declare "The day is less than or equal to 31" $ di <= 31
-              , declare "The month is strictly positive" $ mi >= 1
-              , declare "The month is less than or equal to 12" $ mi <= 12
-              , declare "The number of days makes sense for the month" $
-                maybe False (>= di) $ lookup (numMonth mi) (daysInMonth 2004)
-              ]
+              mconcat
+                [ declare "The day is strictly positive" $ di >= 1,
+                  declare "The day is less than or equal to 31" $ di <= 31,
+                  declare "The month is strictly positive" $ mi >= 1,
+                  declare "The month is less than or equal to 12" $ mi <= 12,
+                  declare "The number of days makes sense for the month" $
+                    maybe False (>= di) $ lookup (numMonth mi) (daysInMonth 2004)
+                ]
           _ -> valid
       ]
 
 instance NFData FuzzyDay
-#if !MIN_VERSION_time(1,9,0)
-data DayOfWeek
-  = Monday
-  | Tuesday
-  | Wednesday
-  | Thursday
-  | Friday
-  | Saturday
-  | Sunday
-  deriving (Show, Eq, Generic, Enum, Bounded)
-#else
+
 deriving instance Generic DayOfWeek
-#endif
+
 instance NFData DayOfWeek
 
 dayOfTheWeekNum :: DayOfWeek -> Int
-numDayOfTheWeek :: Int -> DayOfWeek
-#if MIN_VERSION_time(1,9,0)
 dayOfTheWeekNum = fromEnum
 
+numDayOfTheWeek :: Int -> DayOfWeek
 numDayOfTheWeek = toEnum
-#else
-dayOfTheWeekNum = (+ 1) . fromEnum
 
-numDayOfTheWeek = toEnum . (\x -> x - 1)
-#endif
 data Month
   = January
   | February
@@ -191,21 +172,22 @@ instance NFData Month
 
 daysInMonth :: Integer -> [(Month, Int)]
 daysInMonth y =
-  [ (January, 31)
-  , ( February
-    , if isLeapYear y
+  [ (January, 31),
+    ( February,
+      if isLeapYear y
         then 29
-        else 28)
-  , (March, 31)
-  , (April, 30)
-  , (May, 31)
-  , (June, 30)
-  , (July, 31)
-  , (August, 31)
-  , (September, 30)
-  , (October, 31)
-  , (November, 30)
-  , (December, 31)
+        else 28
+    ),
+    (March, 31),
+    (April, 30),
+    (May, 31),
+    (June, 30),
+    (July, 31),
+    (August, 31),
+    (September, 30),
+    (October, 31),
+    (November, 30),
+    (December, 31)
   ]
 
 monthNum :: Month -> Int

@@ -1,12 +1,15 @@
 name: fuzzy-time-gen
-version: '0.1.0.0'
+version: '0.2.0.0'
 category: Time
 author: Tom Sydney Kerckhove
 maintainer: syd@cs-syd.eu
-copyright: ! 'Copyright: (c) 2017-2020 Tom Sydney Kerckhove'
+copyright: ! 'Copyright: (c) 2017-2021 Tom Sydney Kerckhove'
 license: MIT
 homepage: https://github.com/NorfairKing/fuzzy-time
 description: Generators for fuzzy-time types
+
+extra-source-files:
+- CHANGELOG.md
 
 dependencies:
 - base >=4.9 && <=5
@@ -18,7 +21,7 @@ library:
   - QuickCheck
   - containers
   - fuzzy-time
-  - genvalidity
+  - genvalidity >=1.0
   - genvalidity-time
   - megaparsec
   - time

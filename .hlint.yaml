@@ -1,0 +1,6 @@
+- ignore:
+    name: "Eta reduce"
+- ignore:
+    name: "Avoid lambda"
+- ignore:
+    name: "Use <$>"

@@ -1,22 +1,24 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4979abc627af2c6063f556a9b81bcde01dac4d1131f6201b91cc0d4c3556f29e
+-- hash: 6469e029979ef60ea4025a3c77b68c315934bc45e576beb1ba77b9e1d70f06ee
 
 name:           fuzzy-time
-version:        0.1.0.0
+version:        0.2.0.0
 description:    Fuzzy time types, parsing and resolution
 category:       Time
 homepage:       https://github.com/NorfairKing/fuzzy-time
 author:         Tom Sydney Kerckhove
 maintainer:     syd@cs-syd.eu
-copyright:      Copyright: (c) 2017-2020 Tom Sydney Kerckhove
+copyright:      Copyright: (c) 2017-2021 Tom Sydney Kerckhove
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    CHANGELOG.md
 
 library
   exposed-modules:
@@ -35,7 +37,7 @@ library
     , deepseq
     , megaparsec
     , text
-    , time
+    , time >=1.9
     , validity
     , validity-time
   default-language: Haskell2010
