@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6469e029979ef60ea4025a3c77b68c315934bc45e576beb1ba77b9e1d70f06ee
+-- hash: 4b7454d631016e005961a3b25fd8c70409c941e88db630e3c0250f6181ced39c
 
 name:           fuzzy-time
 version:        0.2.0.0
@@ -39,5 +39,5 @@ library
     , text
     , time >=1.9
     , validity
-    , validity-time
+    , validity-time >=0.5.0.0 && <0.6
   default-language: Haskell2010

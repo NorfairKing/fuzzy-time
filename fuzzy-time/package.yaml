@@ -22,4 +22,4 @@ library:
   - text
   - time >=1.9
   - validity
-  - validity-time
+  - validity-time ^>=0.5.0.0
