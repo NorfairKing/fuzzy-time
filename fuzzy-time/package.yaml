@@ -1,5 +1,5 @@
 name: fuzzy-time
-version: '0.2.0.0'
+version: 0.2.0.1
 category: Time
 author: Tom Sydney Kerckhove
 maintainer: syd@cs-syd.eu
@@ -22,4 +22,4 @@ library:
   - text
   - time >=1.9
   - validity
-  - validity-time
+  - validity-time >=0.5

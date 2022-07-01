@@ -13,6 +13,5 @@ main =
     [ genValidBench @FuzzyLocalTime,
       genValidBench @FuzzyTimeOfDay,
       genValidBench @FuzzyDay,
-      genValidBench @DayOfTheWeek,
       genValidBench @Month
     ]
