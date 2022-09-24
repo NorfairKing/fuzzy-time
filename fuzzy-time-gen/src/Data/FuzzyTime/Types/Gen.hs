@@ -30,7 +30,7 @@ instance GenValid FuzzyTimeOfDay where
         AtMinute <$> choose (0, 23) <*> choose (0, 59),
         AtExact <$> genValid,
         HoursDiff <$> choose (-23, 23),
-        MinutesDiff <$> choose (- (24 * 60 - 1), 24 * 60 - 1),
+        MinutesDiff <$> choose (-(24 * 60 - 1), 24 * 60 - 1),
         SecondsDiff <$> genValid
       ]
       `suchThat` isValid

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-missing-import-lists #-}
+
 module Data.FuzzyTime
   ( module Data.FuzzyTime.Types,
     module Data.FuzzyTime.Parser,

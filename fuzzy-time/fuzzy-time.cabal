@@ -30,7 +30,7 @@ library
       Paths_fuzzy_time
   hs-source-dirs:
       src/
-  ghc-options: -Wall
+  ghc-options: -Wall -Wmissing-import-lists
   build-depends:
       base >=4.9 && <=5
     , containers

@@ -19,20 +19,20 @@ module Data.FuzzyTime.Parser
   )
 where
 
-import Control.Monad
-import Data.Char as Char
-import Data.Fixed
-import Data.FuzzyTime.Types
-import Data.List
-import Data.Maybe
+import Control.Monad (guard, msum, void)
+import Data.Char as Char (toLower)
+import Data.Fixed (Pico)
+import Data.FuzzyTime.Types (DayOfWeek (Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday), FuzzyDay (DayInMonth, DiffDays, DiffMonths, DiffWeeks, ExactDay, NextDayOfTheWeek, Now, OnlyDay, Today, Tomorrow, Yesterday), FuzzyLocalTime (FuzzyLocalTime), FuzzyTimeOfDay (AtExact, AtHour, AtMinute, Evening, HoursDiff, Midnight, MinutesDiff, Morning, Noon, SecondsDiff), FuzzyZonedTime (ZonedNow), Some (Both, One, Other))
+import Data.List (elemIndex, find)
+import Data.Maybe (fromMaybe, maybeToList)
 import Data.Text (Text)
-import Data.Time
-import Data.Tree
-import Data.Validity
-import Data.Void
-import Text.Megaparsec
-import Text.Megaparsec.Char as Char
-import Text.Megaparsec.Char.Lexer as Lexer
+import Data.Time (TimeOfDay (TimeOfDay), defaultTimeLocale, parseTimeM)
+import Data.Tree (Forest, Tree (Node), rootLabel, subForest)
+import Data.Validity (isValid)
+import Data.Void (Void)
+import Text.Megaparsec (Parsec, empty, eof, label, oneOf, optional, some, try, (<|>))
+import Text.Megaparsec.Char as Char (char, digitChar, letterChar, space1, string)
+import Text.Megaparsec.Char.Lexer as Lexer (decimal)
 
 type Parser = Parsec Void Text
 
