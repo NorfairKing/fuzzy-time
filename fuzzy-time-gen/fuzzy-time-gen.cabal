@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           fuzzy-time-gen
-version:        0.2.0.0
+version:        0.2.0.1
 description:    Generators for fuzzy-time types
 category:       Time
 homepage:       https://github.com/NorfairKing/fuzzy-time
