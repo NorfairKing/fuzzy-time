@@ -13,11 +13,11 @@ module Data.FuzzyTime.Resolve
   )
 where
 
-import Data.Fixed
-import Data.FuzzyTime.Types
-import Data.Maybe
-import Data.Time
-import Data.Time.Calendar.WeekDate
+import Data.Fixed (Pico, mod')
+import Data.FuzzyTime.Types (AmbiguousLocalTime (BothTimeAndDay, OnlyDaySpecified), FuzzyDay (DayInMonth, DiffDays, DiffMonths, DiffWeeks, ExactDay, NextDayOfTheWeek, Now, OnlyDay, Today, Tomorrow, Yesterday), FuzzyLocalTime (FuzzyLocalTime), FuzzyTimeOfDay (AtExact, AtHour, AtMinute, Evening, HoursDiff, Midnight, MinutesDiff, Morning, Noon, SameTime, SecondsDiff), FuzzyZonedTime (ZonedNow), Month, Some (Both, One, Other), dayOfTheWeekNum, daysInMonth, monthNum, numMonth)
+import Data.Maybe (fromJust)
+import Data.Time (Day, DayOfWeek, LocalTime (LocalTime), TimeOfDay (TimeOfDay), ZonedTime, addDays, fromGregorian, midday, midnight, toGregorian)
+import Data.Time.Calendar.WeekDate (toWeekDate)
 
 resolveZonedTime :: ZonedTime -> FuzzyZonedTime -> ZonedTime
 resolveZonedTime zt ZonedNow = zt

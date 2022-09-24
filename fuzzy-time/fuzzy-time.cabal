@@ -3,8 +3,6 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: be2dc14db2784ea2dd83200f9029650d8b2ed66b6bb584bef3b0e70f163c5507
 
 name:           fuzzy-time
 version:        0.2.0.1

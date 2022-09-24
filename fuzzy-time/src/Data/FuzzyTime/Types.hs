@@ -8,11 +8,11 @@ module Data.FuzzyTime.Types
   )
 where
 
-import Control.DeepSeq
-import Data.Fixed
-import Data.Int
-import Data.Time
-import Data.Validity
+import Control.DeepSeq (NFData)
+import Data.Fixed (Pico)
+import Data.Int (Int16)
+import Data.Time (Day, DayOfWeek (Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday), LocalTime, TimeOfDay, isLeapYear)
+import Data.Validity (Validity (validate), declare, decorate, genericValidate, valid)
 import Data.Validity.Time ()
 import GHC.Generics (Generic)
 
