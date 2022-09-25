@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.0.3] - 2022-09-25
+
+### Changed
+
+* Compatibility with `time 1.11`
+
 ## [0.2.0.2] - 2022-09-24
 
 ### Changed

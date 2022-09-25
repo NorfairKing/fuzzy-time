@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -143,7 +144,9 @@ instance NFData FuzzyDay
 
 deriving instance Generic DayOfWeek
 
+#if !MIN_VERSION_time(1,11,1)
 instance NFData DayOfWeek
+#endif
 
 dayOfTheWeekNum :: DayOfWeek -> Int
 dayOfTheWeekNum = fromEnum
