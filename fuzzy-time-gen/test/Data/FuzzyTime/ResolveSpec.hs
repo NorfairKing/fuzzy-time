@@ -198,19 +198,19 @@ spec = do
       it "has an inverse with (small) hoursDiff" $
         forAllValid $
           \tod ->
-            forAll (choose (-(24 - 1), 24 - 1)) $ \hd ->
-              resolveTimeOfDay (resolveTimeOfDay tod (HoursDiff hd)) (HoursDiff (-hd)) `shouldBe` tod
+            forAll (choose (- (24 - 1), 24 - 1)) $ \hd ->
+              resolveTimeOfDay (resolveTimeOfDay tod (HoursDiff hd)) (HoursDiff (- hd)) `shouldBe` tod
       it "has an inverse with (small) minutesDiff" $
         forAllValid $
           \tod ->
-            forAll (choose (-(24 * 60 - 1), 24 * 60 - 1)) $ \md ->
-              resolveTimeOfDay (resolveTimeOfDay tod (MinutesDiff md)) (MinutesDiff (-md))
+            forAll (choose (- (24 * 60 - 1), 24 * 60 - 1)) $ \md ->
+              resolveTimeOfDay (resolveTimeOfDay tod (MinutesDiff md)) (MinutesDiff (- md))
                 `shouldBe` tod
       it "has an inverse with (small) secondsDiff" $
         forAllValid $
           \tod ->
             forAll (max (-1000) . min 1000 <$> genValid) $ \sd ->
-              resolveTimeOfDay (resolveTimeOfDay tod (SecondsDiff sd)) (SecondsDiff (-sd))
+              resolveTimeOfDay (resolveTimeOfDay tod (SecondsDiff sd)) (SecondsDiff (- sd))
                 `shouldBe` tod
   describe "resolveDay" $ do
     it "produces valid days" $ producesValid2 resolveDay

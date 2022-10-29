@@ -4,3 +4,4 @@ result*
 *.css
 *.js
 .pre-commit-config.yaml
+dist-newstyle/
