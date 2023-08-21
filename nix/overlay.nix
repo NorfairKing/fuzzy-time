@@ -10,14 +10,15 @@ with final.haskell.lib;
   haskellPackages = prev.haskellPackages.override (old: {
     overrides = composeExtensions (old.overrides or (_: _: { })) (
       self: super:
-        let fuzzyTimePackages =
-          let fuzzyTimePkg = name: buildStrictly (self.callPackage (../${name}) { });
-          in
-          final.lib.genAttrs [
-            "fuzzy-time"
-            "fuzzy-time-gen"
-          ]
-            fuzzyTimePkg;
+        let
+          fuzzyTimePackages =
+            let fuzzyTimePkg = name: buildStrictly (self.callPackage (../${name}) { });
+            in
+            final.lib.genAttrs [
+              "fuzzy-time"
+              "fuzzy-time-gen"
+            ]
+              fuzzyTimePkg;
         in
         { inherit fuzzyTimePackages; } // fuzzyTimePackages
     );

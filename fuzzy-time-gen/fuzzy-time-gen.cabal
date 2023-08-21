@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -11,7 +11,7 @@ category:       Time
 homepage:       https://github.com/NorfairKing/fuzzy-time
 author:         Tom Sydney Kerckhove
 maintainer:     syd@cs-syd.eu
-copyright:      Copyright: (c) 2017-2021 Tom Sydney Kerckhove
+copyright:      Copyright: (c) 2017-2022 Tom Sydney Kerckhove
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple

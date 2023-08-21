@@ -206,23 +206,28 @@ spec = do
     let s = parseJustSpec fuzzyDayP
     let f = parseNothingSpec fuzzyDayP
     it "parses x as OnlyDay x for x between 1 and 31" $
-      forAll (choose (1, 31)) $ \i -> parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
+      forAll (choose (1, 31)) $
+        \i -> parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
     s "+3" (DiffDays 3)
     s "-3" (DiffDays $ -3)
     it "Parses +x as DiffDays x" $
-      forAllValid $ \i -> parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
+      forAllValid $
+        \i -> parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
     s "+4d" (DiffDays 4)
     s "-4d" (DiffDays $ -4)
     it "Parses +xd as DiffDays x" $
-      forAllValid $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
+      forAllValid $
+        \i -> parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
     s "+5w" (DiffWeeks 5)
     s "-5w" (DiffWeeks $ -5)
     it "Parses +xw as DiffWeeks x" $
-      forAllValid $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
+      forAllValid $
+        \i -> parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
     s "+6m" (DiffMonths 6)
     s "-6m" (DiffMonths $ -6)
     it "Parses +xw as DiffMonths x" $
-      forAllValid $ \i -> parseJust fuzzyDayP (T.pack (printf "%+dm" i)) (DiffMonths i)
+      forAllValid $
+        \i -> parseJust fuzzyDayP (T.pack (printf "%+dm" i)) (DiffMonths i)
     f "0-0"
     s "2-13" (DayInMonth 2 13)
     s "12-3" (DayInMonth 12 3)
@@ -245,7 +250,8 @@ spec = do
                  in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth m d)
     it "parses whatever the fuzzy day parser parses, as the next day of the week" $
       forAllValid $ \t ->
-        case (,) <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t
+        case (,)
+          <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t
           <*> parse (fuzzyDayP <* eof) "test input" t of
           Left _ -> pure ()
           Right (dow, fd_) ->

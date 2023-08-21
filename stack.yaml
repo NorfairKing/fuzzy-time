@@ -1,10 +1,10 @@
-resolver: lts-19.6
+resolver: lts-20.25
 packages:
 - fuzzy-time
 - fuzzy-time-gen
 extra-deps:
 - github: NorfairKing/validity
-  commit: d88be911a7e2a84f6c089e9269aaed8d10a74acd
+  commit: 20ddbd625304817694b7ae9dc8751f7456259dd6
   subdirs:
   - genvalidity
   - genvalidity-aeson

@@ -135,7 +135,8 @@ instance Validity FuzzyDay where
                   declare "The month is strictly positive" $ mi >= 1,
                   declare "The month is less than or equal to 12" $ mi <= 12,
                   declare "The number of days makes sense for the month" $
-                    maybe False (>= di) $ lookup (numMonth mi) (daysInMonth 2004)
+                    maybe False (>= di) $
+                      lookup (numMonth mi) (daysInMonth 2004)
                 ]
           _ -> valid
       ]
