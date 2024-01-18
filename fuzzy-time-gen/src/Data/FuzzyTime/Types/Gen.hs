@@ -7,10 +7,6 @@ import Data.GenValidity
 import Data.GenValidity.Time ()
 import Test.QuickCheck
 
-instance (GenValid a, GenValid b) => GenValid (Some a b) where
-  genValid = genValidStructurallyWithoutExtraChecking
-  shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
-
 instance GenValid AmbiguousLocalTime where
   genValid = genValidStructurallyWithoutExtraChecking
   shrinkValid = shrinkValidStructurallyWithoutExtraFiltering
@@ -47,12 +43,8 @@ instance GenValid FuzzyDay where
         DayInMonth <$> choose (1, 31) <*> choose (1, 12),
         DiffDays <$> genValid,
         DiffWeeks <$> genValid,
-        NextDayOfTheWeek <$> genValid,
+        DayOfTheWeek <$> genValid <*> genValid,
         ExactDay <$> genValid
       ]
       `suchThat` isValid
-  shrinkValid = shrinkValidStructurally
-
-instance GenValid Month where
-  genValid = genValidStructurally
   shrinkValid = shrinkValidStructurally

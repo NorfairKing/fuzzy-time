@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Data.FuzzyTime.ParserSpec
   ( spec,
@@ -15,6 +16,7 @@ import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
+import Data.Time.Calendar.MonthDay (monthLength)
 import Data.Void
 import Test.Hspec
 import Test.Hspec.QuickCheck
@@ -30,51 +32,57 @@ spec = do
     let p = parseJustSpec fuzzyLocalTimeP
         pr = parseJustSpecR fuzzyLocalTimeP
         f = parseNothingSpec fuzzyLocalTimeP
-    p "1" (FuzzyLocalTime $ One $ OnlyDay 1)
-    p "today" (FuzzyLocalTime $ One Today)
-    p "Today" (FuzzyLocalTime $ One Today)
-    p "TodAY" (FuzzyLocalTime $ One Today)
-    p "monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
-    p "Monday" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
-    p "MoNDay" (FuzzyLocalTime $ One $ NextDayOfTheWeek Monday)
-    p "8:" (FuzzyLocalTime $ Other $ AtHour 8)
-    p "09:" (FuzzyLocalTime $ Other $ AtHour 9)
-    p "05:06" (FuzzyLocalTime $ Other $ AtMinute 5 6)
-    p "evening" (FuzzyLocalTime $ Other Evening)
-    p "tues 05:06" (FuzzyLocalTime $ Both (NextDayOfTheWeek Tuesday) (AtMinute 5 6))
-    p "wed 5:06" (FuzzyLocalTime $ Both (NextDayOfTheWeek Wednesday) (AtMinute 5 6))
-    p "thu 11:" (FuzzyLocalTime $ Both (NextDayOfTheWeek Thursday) (AtHour 11))
-    p "8 05:06" (FuzzyLocalTime $ Both (OnlyDay 8) (AtMinute 5 6))
-    p "02-07 05:06" (FuzzyLocalTime $ Both (DayInMonth 2 7) (AtMinute 5 6))
-    pr 3 "noon" $ FuzzyLocalTime $ Other Noon
-    pr 3 "Noon" $ FuzzyLocalTime $ Other Noon
-    pr 4 "midday" $ FuzzyLocalTime $ Other Noon
-    pr 4 "Midday" $ FuzzyLocalTime $ Other Noon
-    pr 4 "midnight" $ FuzzyLocalTime $ Other Midnight
-    pr 4 "Midnight" $ FuzzyLocalTime $ Other Midnight
-    pr 3 "morning" $ FuzzyLocalTime $ Other Morning
-    pr 3 "Morning" $ FuzzyLocalTime $ Other Morning
-    pr 1 "evening" $ FuzzyLocalTime $ Other Evening
-    pr 1 "Evening" $ FuzzyLocalTime $ Other Evening
-    p "6:07" $ FuzzyLocalTime $ Other (AtMinute 6 7)
-    p "08:09" $ FuzzyLocalTime $ Other (AtMinute 8 9)
-    p "1011" $ FuzzyLocalTime $ Other (AtMinute 10 11)
-    p "0324" $ FuzzyLocalTime $ Other (AtMinute 3 24)
-    p "23:59:22" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 23 59 22)
-    p "5:06:23" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 5 6 23)
-    p "0506:23" $ FuzzyLocalTime $ Other $ AtExact (TimeOfDay 5 6 23)
-    p "+5h" $ FuzzyLocalTime $ Other (HoursDiff 5)
-    p "-6h" $ FuzzyLocalTime $ Other (HoursDiff (-6))
-    p "+7m" $ FuzzyLocalTime $ One (DiffMonths 7)
-    p "-8m" $ FuzzyLocalTime $ One (DiffMonths (-8))
-    p "+9s" $ FuzzyLocalTime $ Other (SecondsDiff 9)
-    p "-10s" $ FuzzyLocalTime $ Other (SecondsDiff (-10))
+    p "1" (FuzzyLocalTimeDay $ OnlyDay 1)
+    p "1-1" (FuzzyLocalTimeDay $ DayInMonth 1 1)
+    p "01-1" (FuzzyLocalTimeDay $ DayInMonth 1 1)
+    p "jan-1" (FuzzyLocalTimeDay $ DayInMonth 1 1)
+    p "today" (FuzzyLocalTimeDay Today)
+    p "Today" (FuzzyLocalTimeDay Today)
+    p "TodAY" (FuzzyLocalTimeDay Today)
+    p "monday" (FuzzyLocalTimeDay $ DayOfTheWeek Monday 0)
+    p "Monday" (FuzzyLocalTimeDay $ DayOfTheWeek Monday 0)
+    p "MoNDay" (FuzzyLocalTimeDay $ DayOfTheWeek Monday 0)
+    p "mon+1" (FuzzyLocalTimeDay $ DayOfTheWeek Monday 1)
+    p "tues-1" (FuzzyLocalTimeDay $ DayOfTheWeek Tuesday (-1))
+    p "wed+20" (FuzzyLocalTimeDay $ DayOfTheWeek Wednesday 20)
+    p "8:" (FuzzyLocalTimeTimeOfDay $ AtHour 8)
+    p "09:" (FuzzyLocalTimeTimeOfDay $ AtHour 9)
+    p "05:06" (FuzzyLocalTimeTimeOfDay $ AtMinute 5 6)
+    p "evening" (FuzzyLocalTimeTimeOfDay Evening)
+    p "tues 05:06" (FuzzyLocalTimeBoth (DayOfTheWeek Tuesday 0) (AtMinute 5 6))
+    p "wed 5:06" (FuzzyLocalTimeBoth (DayOfTheWeek Wednesday 0) (AtMinute 5 6))
+    p "thu 11:" (FuzzyLocalTimeBoth (DayOfTheWeek Thursday 0) (AtHour 11))
+    p "8 05:06" (FuzzyLocalTimeBoth (OnlyDay 8) (AtMinute 5 6))
+    p "02-07 05:06" (FuzzyLocalTimeBoth (DayInMonth 2 7) (AtMinute 5 6))
+    pr 3 "noon" $ FuzzyLocalTimeTimeOfDay Noon
+    pr 3 "Noon" $ FuzzyLocalTimeTimeOfDay Noon
+    pr 4 "midday" $ FuzzyLocalTimeTimeOfDay Noon
+    pr 4 "Midday" $ FuzzyLocalTimeTimeOfDay Noon
+    pr 4 "midnight" $ FuzzyLocalTimeTimeOfDay Midnight
+    pr 4 "Midnight" $ FuzzyLocalTimeTimeOfDay Midnight
+    pr 3 "morning" $ FuzzyLocalTimeTimeOfDay Morning
+    pr 3 "Morning" $ FuzzyLocalTimeTimeOfDay Morning
+    pr 1 "evening" $ FuzzyLocalTimeTimeOfDay Evening
+    pr 1 "Evening" $ FuzzyLocalTimeTimeOfDay Evening
+    p "6:07" $ FuzzyLocalTimeTimeOfDay (AtMinute 6 7)
+    p "08:09" $ FuzzyLocalTimeTimeOfDay (AtMinute 8 9)
+    p "1011" $ FuzzyLocalTimeTimeOfDay (AtMinute 10 11)
+    p "0324" $ FuzzyLocalTimeTimeOfDay (AtMinute 3 24)
+    p "23:59:22" $ FuzzyLocalTimeTimeOfDay $ AtExact (TimeOfDay 23 59 22)
+    p "5:06:23" $ FuzzyLocalTimeTimeOfDay $ AtExact (TimeOfDay 5 6 23)
+    p "0506:23" $ FuzzyLocalTimeTimeOfDay $ AtExact (TimeOfDay 5 6 23)
+    p "+5h" $ FuzzyLocalTimeTimeOfDay (HoursDiff 5)
+    p "-6h" $ FuzzyLocalTimeTimeOfDay (HoursDiff (-6))
+    p "+7m" $ FuzzyLocalTimeDay (DiffMonths 7)
+    p "-8m" $ FuzzyLocalTimeDay (DiffMonths (-8))
+    p "+9s" $ FuzzyLocalTimeTimeOfDay (SecondsDiff 9)
+    p "-10s" $ FuzzyLocalTimeTimeOfDay (SecondsDiff (-10))
     f "hello"
     f "world"
   describe "twoDigitsSegmentP" $ do
-    parsesValidSpec twoDigitsSegmentP
-    let p = parseJustSpec twoDigitsSegmentP
-        f = parseNothingSpec twoDigitsSegmentP
+    parsesValidSpec (twoDigitsSegmentP @Int)
+    let p = parseJustSpec $ twoDigitsSegmentP @Int
+        f = parseNothingSpec $ twoDigitsSegmentP @Int
     p "0" 0
     p "6" 6
     p "01" 1
@@ -180,7 +188,8 @@ spec = do
           let s = formatTime defaultTimeLocale "%T%Q" tod
            in case parseForTest fuzzyTimeOfDayP (T.pack s) of
                 Left e -> expectationFailure $ errorBundlePretty e
-                Right r -> resolveTimeOfDay tod r `shouldBe` tod
+                Right r -> resolveTimeOfDayForwards tod r `shouldBe` Just tod
+
     describe "HoursDiff" $ do
       p "+3" (HoursDiff 3)
       p "-4" (HoursDiff (-4))
@@ -206,66 +215,62 @@ spec = do
     let s = parseJustSpec fuzzyDayP
     let f = parseNothingSpec fuzzyDayP
     it "parses x as OnlyDay x for x between 1 and 31" $
-      forAll (choose (1, 31)) $
-        \i -> parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
+      forAll (choose (1, 31)) $ \i ->
+        parseJust fuzzyDayP (T.pack (show i)) (OnlyDay i)
     s "+3" (DiffDays 3)
     s "-3" (DiffDays $ -3)
     it "Parses +x as DiffDays x" $
-      forAllValid $
-        \i -> parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
+      forAllValid $ \i ->
+        parseJust fuzzyDayP (T.pack (printf "%+d" i)) (DiffDays i)
     s "+4d" (DiffDays 4)
     s "-4d" (DiffDays $ -4)
     it "Parses +xd as DiffDays x" $
-      forAllValid $
-        \i -> parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
+      forAllValid $ \i ->
+        parseJust fuzzyDayP (T.pack (printf "%+dd" i)) (DiffDays i)
     s "+5w" (DiffWeeks 5)
     s "-5w" (DiffWeeks $ -5)
     it "Parses +xw as DiffWeeks x" $
-      forAllValid $
-        \i -> parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
+      forAllValid $ \i ->
+        parseJust fuzzyDayP (T.pack (printf "%+dw" i)) (DiffWeeks i)
     s "+6m" (DiffMonths 6)
     s "-6m" (DiffMonths $ -6)
     it "Parses +xw as DiffMonths x" $
-      forAllValid $
-        \i -> parseJust fuzzyDayP (T.pack (printf "%+dm" i)) (DiffMonths i)
+      forAllValid $ \i ->
+        parseJust fuzzyDayP (T.pack (printf "%+dm" i)) (DiffMonths i)
     f "0-0"
     s "2-13" (DayInMonth 2 13)
     s "12-3" (DayInMonth 12 3)
     s "02-13" (DayInMonth 2 13)
     s "12-03" (DayInMonth 12 3)
     s "02-03" (DayInMonth 2 3)
+    s "oCT-01" (DayInMonth 10 1)
+    s "Nov-02" (DayInMonth 11 2)
+    s "dec-03" (DayInMonth 12 3)
     f "002-03"
     f "02-003"
     f "002-003"
     modifyMaxSuccess (\x -> (x * (365 * 4)) `div` 100) $
       it "parses m-d (in any format) as DayInMonth" $
-        forAll (elements $ daysInMonth 2004) $ \(month, mds) ->
-          let m = monthNum month
+        forAll (choose (1, 12)) $ \m ->
+          let mds = fromIntegral $ monthLength False m
            in forAll (choose (1, mds)) $ \d ->
                 let options =
                       nub $ do
                         ms <- [printf "%d" m, printf "%02d" m]
                         ds <- [printf "%d" d, printf "%02d" d]
                         pure $ T.pack $ concat [ms, "-", ds] :: [Text]
-                 in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth m d)
-    it "parses whatever the fuzzy day parser parses, as the next day of the week" $
-      forAllValid $ \t ->
-        case (,)
-          <$> parse (fuzzyDayOfTheWeekP <* eof) "test input" t
-          <*> parse (fuzzyDayP <* eof) "test input" t of
-          Left _ -> pure ()
-          Right (dow, fd_) ->
-            case fd_ of
-              NextDayOfTheWeek dow' -> dow' `shouldBe` dow
-              _ -> expectationFailure "fuzzyDayP parsed something other than a day of the week"
-    it "parses the day of the week string as NextDayOfTheWeek" $
+                 in forAll (elements options) $ \s_ -> parseJust fuzzyDayP s_ (DayInMonth (fromIntegral m) d)
+
+    it "parses the day of the week string as DayOfTheWeek" $
       forAll (elements dayOfTheWeekStrings) $ \(dow, i, t) ->
         forAll (elements $ drop i $ T.inits t) $ \t_ ->
-          parseJust fuzzyDayP t_ (NextDayOfTheWeek dow)
+          parseJust fuzzyDayP t_ (DayOfTheWeek dow 0)
+
   describe "fuzzyDayOfTheWeekP" $ do
     parsesValidSpec fuzzyDayOfTheWeekP
     let fd = parseJustSpecR fuzzyDayOfTheWeekP
-    forM_ dayOfTheWeekStrings $ \(dow, ix, s) -> fd ix s dow
+    forM_ dayOfTheWeekStrings $ \(dow, ix, s) ->
+      fd ix s (DayOfTheWeek dow 0)
 
 dayOfTheWeekStrings :: [(DayOfWeek, Int, Text)]
 dayOfTheWeekStrings =
@@ -291,10 +296,10 @@ parseJustSpecR p i t res = mapM_ (\s_ -> parseJustSpec p s_ res) $ drop i $ T.in
 parseJustSpec :: (Show a, Eq a) => Parser a -> Text -> a -> Spec
 parseJustSpec p s res = it (unwords ["parses", show s, "as", show res]) $ parseJust p s res
 
-parseNothingSpec :: (Show a, Eq a) => Parser a -> Text -> Spec
+parseNothingSpec :: (Show a) => Parser a -> Text -> Spec
 parseNothingSpec p s = it (unwords ["fails to parse", show s]) $ parseNothing p s
 
-parsesValidSpec :: (Show a, Eq a, Validity a) => Parser a -> Spec
+parsesValidSpec :: (Show a, Validity a) => Parser a -> Spec
 parsesValidSpec p = it "only parses valid values" $ forAllValid $ parsesValid p
 
 parseJust :: (Show a, Eq a) => Parser a -> Text -> a -> Expectation
@@ -305,7 +310,7 @@ parseJust p s res =
       expectationFailure $
         unlines ["Parser failed on input", show s, "with error", errorBundlePretty err]
 
-parseNothing :: (Show a, Eq a) => Parser a -> Text -> Expectation
+parseNothing :: (Show a) => Parser a -> Text -> Expectation
 parseNothing p s =
   case parseForTest p s of
     Left _ -> pure ()
@@ -314,7 +319,7 @@ parseNothing p s =
         unlines
           ["Parser succeeded on input", show s, "at parsing", show v, "but it should have failed."]
 
-parsesValid :: (Show a, Eq a, Validity a) => Parser a -> Text -> Expectation
+parsesValid :: (Show a, Validity a) => Parser a -> Text -> Expectation
 parsesValid p s =
   case parseForTest p s of
     Left _ -> pure ()

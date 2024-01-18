@@ -12,46 +12,30 @@ where
 import Control.DeepSeq (NFData)
 import Data.Fixed (Pico)
 import Data.Int (Int16)
-import Data.Time (Day, DayOfWeek (Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday), LocalTime, TimeOfDay, isLeapYear)
+import Data.Time (Day, DayOfWeek (Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday), LocalTime, TimeOfDay)
 import Data.Validity (Validity (validate), declare, decorate, genericValidate, valid)
 import Data.Validity.Time ()
+import Data.Word (Word8)
 import GHC.Generics (Generic)
 
-data FuzzyZonedTime
-  = ZonedNow
-  deriving (Show, Eq, Generic)
-
-instance Validity FuzzyZonedTime
-
-instance NFData FuzzyZonedTime
-
 data AmbiguousLocalTime
-  = OnlyDaySpecified Day
-  | BothTimeAndDay LocalTime
+  = OnlyDaySpecified !Day
+  | BothTimeAndDay !LocalTime
   deriving (Show, Eq, Generic)
 
 instance Validity AmbiguousLocalTime
 
 instance NFData AmbiguousLocalTime
 
-newtype FuzzyLocalTime = FuzzyLocalTime
-  { unFuzzyLocalTime :: Some FuzzyDay FuzzyTimeOfDay
-  }
+data FuzzyLocalTime
+  = FuzzyLocalTimeDay !FuzzyDay
+  | FuzzyLocalTimeTimeOfDay !FuzzyTimeOfDay
+  | FuzzyLocalTimeBoth !FuzzyDay !FuzzyTimeOfDay
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyLocalTime
 
 instance NFData FuzzyLocalTime
-
-data Some a b
-  = One a
-  | Other b
-  | Both a b
-  deriving (Show, Eq, Generic)
-
-instance (Validity a, Validity b) => Validity (Some a b)
-
-instance (NFData a, NFData b) => NFData (Some a b)
 
 data FuzzyTimeOfDay
   = SameTime
@@ -107,13 +91,13 @@ data FuzzyDay
   | Now
   | Today
   | Tomorrow
-  | OnlyDay Int
-  | DayInMonth Int Int
-  | DiffDays Int16
-  | DiffWeeks Int16
-  | DiffMonths Int16
-  | NextDayOfTheWeek DayOfWeek
-  | ExactDay Day
+  | OnlyDay !Word8
+  | DayInMonth !Word8 !Word8
+  | DiffDays !Int16
+  | DiffWeeks !Int16
+  | DiffMonths !Int16
+  | DayOfTheWeek !DayOfWeek !Int16 -- Extra diff weeks
+  | ExactDay !Day
   deriving (Show, Eq, Generic)
 
 instance Validity FuzzyDay where
@@ -133,10 +117,7 @@ instance Validity FuzzyDay where
                 [ declare "The day is strictly positive" $ di >= 1,
                   declare "The day is less than or equal to 31" $ di <= 31,
                   declare "The month is strictly positive" $ mi >= 1,
-                  declare "The month is less than or equal to 12" $ mi <= 12,
-                  declare "The number of days makes sense for the month" $
-                    maybe False (>= di) $
-                      lookup (numMonth mi) (daysInMonth 2004)
+                  declare "The month is less than or equal to 12" $ mi <= 12
                 ]
           _ -> valid
       ]
@@ -148,54 +129,3 @@ deriving instance Generic DayOfWeek
 #if !MIN_VERSION_time(1,11,1)
 instance NFData DayOfWeek
 #endif
-
-dayOfTheWeekNum :: DayOfWeek -> Int
-dayOfTheWeekNum = fromEnum
-
-numDayOfTheWeek :: Int -> DayOfWeek
-numDayOfTheWeek = toEnum
-
-data Month
-  = January
-  | February
-  | March
-  | April
-  | May
-  | June
-  | July
-  | August
-  | September
-  | October
-  | November
-  | December
-  deriving (Show, Eq, Generic, Enum, Bounded)
-
-instance Validity Month
-
-instance NFData Month
-
-daysInMonth :: Integer -> [(Month, Int)]
-daysInMonth y =
-  [ (January, 31),
-    ( February,
-      if isLeapYear y
-        then 29
-        else 28
-    ),
-    (March, 31),
-    (April, 30),
-    (May, 31),
-    (June, 30),
-    (July, 31),
-    (August, 31),
-    (September, 30),
-    (October, 31),
-    (November, 30),
-    (December, 31)
-  ]
-
-monthNum :: Month -> Int
-monthNum = (+ 1) . fromEnum
-
-numMonth :: Int -> Month
-numMonth = toEnum . (\x -> x - 1)

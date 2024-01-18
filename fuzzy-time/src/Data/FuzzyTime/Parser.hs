@@ -4,8 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.FuzzyTime.Parser
-  ( fuzzyZonedTimeP,
-    fuzzyLocalTimeP,
+  ( fuzzyLocalTimeP,
     fuzzyTimeOfDayP,
     atHourP,
     atMinuteP,
@@ -22,38 +21,33 @@ where
 import Control.Monad (guard, msum, void)
 import Data.Char as Char (toLower)
 import Data.Fixed (Pico)
-import Data.FuzzyTime.Types (DayOfWeek (Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday), FuzzyDay (DayInMonth, DiffDays, DiffMonths, DiffWeeks, ExactDay, NextDayOfTheWeek, Now, OnlyDay, Today, Tomorrow, Yesterday), FuzzyLocalTime (FuzzyLocalTime), FuzzyTimeOfDay (AtExact, AtHour, AtMinute, Evening, HoursDiff, Midnight, MinutesDiff, Morning, Noon, SecondsDiff), FuzzyZonedTime (ZonedNow), Some (Both, One, Other))
-import Data.List (elemIndex, find)
+import Data.FuzzyTime.Types (FuzzyDay (..), FuzzyLocalTime (..), FuzzyTimeOfDay (AtExact, AtHour, AtMinute, Evening, HoursDiff, Midnight, MinutesDiff, Morning, Noon, SecondsDiff))
+import Data.List (find)
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Text (Text)
-import Data.Time (TimeOfDay (TimeOfDay), defaultTimeLocale, parseTimeM)
+import Data.Time (DayOfWeek (..), TimeOfDay (TimeOfDay), defaultTimeLocale, parseTimeM)
 import Data.Tree (Forest, Tree (Node), rootLabel, subForest)
 import Data.Validity (isValid)
 import Data.Void (Void)
+import Data.Word (Word8)
 import Text.Megaparsec (Parsec, empty, eof, label, oneOf, optional, some, try, (<|>))
 import Text.Megaparsec.Char as Char (char, digitChar, letterChar, space1, string)
 import Text.Megaparsec.Char.Lexer as Lexer (decimal)
+import Text.Read (readMaybe)
 
 type Parser = Parsec Void Text
 
-fuzzyZonedTimeP :: Parser FuzzyZonedTime
-fuzzyZonedTimeP = pure ZonedNow
-
 fuzzyLocalTimeP :: Parser FuzzyLocalTime
-fuzzyLocalTimeP = label "FuzzyLocalTime" $ FuzzyLocalTime <$> parseSome fuzzyDayP fuzzyTimeOfDayP
-
--- | Note: Not composable
-parseSome :: Parser a -> Parser b -> Parser (Some a b)
-parseSome pa pb =
-  label "Some" $
+fuzzyLocalTimeP =
+  label "FuzzyLocalTime" $
     choice''
       [ do
-          a <- pa
+          a <- fuzzyDayP
           space1
-          b <- pb
-          pure $ Both a b,
-        One <$> pa,
-        Other <$> pb
+          b <- fuzzyTimeOfDayP
+          pure $ FuzzyLocalTimeBoth a b,
+        FuzzyLocalTimeDay <$> fuzzyDayP,
+        FuzzyLocalTimeTimeOfDay <$> fuzzyTimeOfDayP
       ]
 
 fuzzyTimeOfDayP :: Parser FuzzyTimeOfDay
@@ -135,7 +129,7 @@ minuteSegmentP =
     guard $ m >= 0 && m < 60
     pure m
 
-twoDigitsSegmentP :: Parser Int
+twoDigitsSegmentP :: (Num a, Read a) => Parser a
 twoDigitsSegmentP =
   label "two digit segment" $ do
     d1 <- digit
@@ -145,12 +139,12 @@ twoDigitsSegmentP =
         Nothing -> d1
         Just d2 -> 10 * d1 + d2
 
-digit :: Parser Int
+digit :: (Read a) => Parser a
 digit =
   label "digit" $ do
     let l = ['0' .. '9']
     c <- oneOf l
-    case elemIndex c l of
+    case readMaybe [c] of
       Nothing -> fail "Shouldn't happen."
       Just d -> pure d
 
@@ -172,26 +166,50 @@ fuzzyDayP =
         fmap ExactDay (some (digitChar <|> char '-') >>= parseTimeM True defaultTimeLocale "%Y-%m-%d"),
         dayInMonthP,
         dayOfTheMonthP,
-        NextDayOfTheWeek <$> fuzzyDayOfTheWeekP,
+        fuzzyDayOfTheWeekP,
         diffDayP
       ]
 
 dayOfTheMonthP :: Parser FuzzyDay
 dayOfTheMonthP = do
-  v <- OnlyDay <$> twoDigitsSegmentP
+  dayNo <- twoDigitsSegmentP
+  let v = OnlyDay dayNo
   guard $ isValid v
   pure v
 
 dayInMonthP :: Parser FuzzyDay
 dayInMonthP = do
-  m <- twoDigitsSegmentP
-  guard (m >= 1)
-  guard (m <= 12)
+  m <-
+    choice'
+      [ do
+          m <- twoDigitsSegmentP
+          guard (m >= 1)
+          guard (m <= 12)
+          pure m,
+        namedMonthP
+      ]
   void $ string "-"
   d <- twoDigitsSegmentP
   let v = DayInMonth m d
   guard $ isValid v
   pure v
+
+namedMonthP :: Parser Word8
+namedMonthP =
+  recTreeParser
+    [ ("january", 1),
+      ("february", 2),
+      ("march", 3),
+      ("april", 4),
+      ("may", 5),
+      ("june", 6),
+      ("july", 7),
+      ("august", 8),
+      ("september", 9),
+      ("october", 10),
+      ("november", 11),
+      ("december", 12)
+    ]
 
 diffDayP :: Parser FuzzyDay
 diffDayP = do
@@ -206,6 +224,12 @@ diffDayP = do
           _ -> DiffDays -- Should not happen.
   pure $ f d
 
+fuzzyDayOfTheWeekP :: Parser FuzzyDay
+fuzzyDayOfTheWeekP = do
+  dow <- dayOfTheWeekP
+  mExtraDiff <- optional $ signed' decimal
+  pure $ DayOfTheWeek dow (fromMaybe 0 mExtraDiff)
+
 -- | Can handle:
 --
 -- - monday
@@ -217,8 +241,8 @@ diffDayP = do
 -- - sunday
 --
 -- and all non-ambiguous prefixes
-fuzzyDayOfTheWeekP :: Parser DayOfWeek
-fuzzyDayOfTheWeekP =
+dayOfTheWeekP :: Parser DayOfWeek
+dayOfTheWeekP =
   recTreeParser
     [ ("monday", Monday),
       ("tuesday", Tuesday),
@@ -253,10 +277,10 @@ lookupInParseForest = gof
               _ -> gof cs subForest
             else Nothing
 
-makeParseForest :: Eq c => [([c], a)] -> Forest (c, Maybe a)
+makeParseForest :: (Eq c) => [([c], a)] -> Forest (c, Maybe a)
 makeParseForest = foldl insertf []
   where
-    insertf :: Eq c => Forest (c, Maybe a) -> ([c], a) -> Forest (c, Maybe a)
+    insertf :: (Eq c) => Forest (c, Maybe a) -> ([c], a) -> Forest (c, Maybe a)
     insertf for ([], _) = for
     insertf for (c : cs, a) =
       case find ((== c) . fst . rootLabel) for of
@@ -273,7 +297,7 @@ makeParseForest = foldl insertf []
                   then n {rootLabel = (tc, Nothing), subForest = insertf (subForest n) (cs, a)}
                   else t
 
-signed' :: Num a => Parser a -> Parser a
+signed' :: (Num a) => Parser a -> Parser a
 signed' p = sign <*> p
   where
     sign = (id <$ char '+') <|> (negate <$ char '-')

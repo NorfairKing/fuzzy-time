@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0.0] - 2023-05-18
+
+### Added
+
+* Allowed for backwards resolution
+* Allow parsing named months
+* Allow parsing day of week with an extra diff of weeks
+
 ## [0.2.0.3] - 2022-09-25
 
 ### Changed

@@ -12,6 +12,5 @@ main =
   Criterion.defaultMain
     [ genValidBench @FuzzyLocalTime,
       genValidBench @FuzzyTimeOfDay,
-      genValidBench @FuzzyDay,
-      genValidBench @Month
+      genValidBench @FuzzyDay
     ]

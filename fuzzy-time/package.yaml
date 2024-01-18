@@ -1,5 +1,5 @@
 name: fuzzy-time
-version: 0.2.0.3
+version: 0.3.0.0
 category: Time
 author: Tom Sydney Kerckhove
 maintainer: syd@cs-syd.eu
@@ -20,6 +20,6 @@ library:
   - deepseq
   - megaparsec
   - text
-  - time >=1.9
+  - time >=1.11
   - validity
   - validity-time >=0.5

@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "fuzzy-time";
-  version = "0.2.0.3";
+  version = "0.3.0.0";
   src = ./.;
   libraryHaskellDepends = [
     base containers deepseq megaparsec text time validity validity-time
