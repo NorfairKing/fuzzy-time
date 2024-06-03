@@ -1,7 +1,8 @@
 {
   description = "fuzzy-time";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-23.11";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-24.05";
+    nixpkgs-23_11.url = "github:NixOS/nixpkgs?ref=nixos-23.11";
     nixpkgs-23_05.url = "github:NixOS/nixpkgs?ref=nixos-23.05";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     validity.url = "github:NorfairKing/validity";
@@ -11,6 +12,7 @@
   outputs =
     { self
     , nixpkgs
+    , nixpkgs-23_11
     , nixpkgs-23_05
     , pre-commit-hooks
     , validity
@@ -36,6 +38,7 @@
             in pkgs'.fuzzyTimeRelease;
           allNixpkgs = {
             inherit
+              nixpkgs-23_11
               nixpkgs-23_05;
           };
           backwardCompatibilityChecks = pkgs.lib.mapAttrs (_: nixpkgs: backwardCompatibilityCheckFor nixpkgs) allNixpkgs;
@@ -62,14 +65,7 @@
           niv
           zlib
           cabal-install
-        ] ++ (with pre-commit-hooks.packages.${system};
-          [
-            hlint
-            hpack
-            nixpkgs-fmt
-            ormolu
-            cabal2nix
-          ]);
+        ] ++ self.checks.${system}.pre-commit.enabledPackages;
         shellHook = self.checks.${system}.pre-commit.shellHook;
       };
     };

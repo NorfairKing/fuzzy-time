@@ -1,4 +1,4 @@
-resolver: lts-21.22
+resolver: lts-22.22
 packages:
 - fuzzy-time
 - fuzzy-time-gen
@@ -7,7 +7,7 @@ ghc-options:
 
 extra-deps:
 - github: NorfairKing/validity
-  commit: 20ddbd625304817694b7ae9dc8751f7456259dd6
+  commit: b7bf25ca71a0b3f56f58326357c5148246a7a23e
   subdirs:
   - genvalidity
   - genvalidity-aeson
