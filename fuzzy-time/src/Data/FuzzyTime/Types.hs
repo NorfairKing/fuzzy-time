@@ -124,7 +124,9 @@ instance Validity FuzzyDay where
 
 instance NFData FuzzyDay
 
+#if !MIN_VERSION_time(1,14,0)
 deriving instance Generic DayOfWeek
+#endif
 
 #if !MIN_VERSION_time(1,11,1)
 instance NFData DayOfWeek
